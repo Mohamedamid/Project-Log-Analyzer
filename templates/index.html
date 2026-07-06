@@ -289,6 +289,32 @@
       let sortState = { field: "", dir: "asc" };
       let _currentDetailIdx = null;
 
+      function isMobileLayout() {
+        return window.matchMedia("(max-width: 768px)").matches;
+      }
+
+      function updateResponsiveView() {
+        const resultsEl = document.getElementById("results");
+        const tableContainer = document.getElementById("table-container");
+        const mobileCasesList = document.getElementById("mobile-cases-list");
+
+        const mobile = isMobileLayout();
+        document.body.classList.toggle("mobile-layout", mobile);
+
+        const resultsVisible = resultsEl.style.display !== "none";
+        if (resultsVisible) {
+          tableContainer.style.display = mobile ? "none" : "block";
+          mobileCasesList.style.display = mobile ? "grid" : "none";
+        }
+
+        if (allRows.length > 0) {
+          applyFilters();
+        }
+      }
+
+      window.addEventListener("resize", updateResponsiveView);
+      window.addEventListener("orientationchange", updateResponsiveView);
+
       // ===== UPLOAD =====
       function getFileKey(file) {
         return `${file.name}::${file.size}::${file.lastModified}`;
@@ -807,8 +833,9 @@
         const moduleCount = (data.modules || []).length;
         summaryEl.className = "badge-failed";
         summaryEl.innerHTML = `<span>${data.failed_count} Échecs Détectés · ${moduleCount} module${moduleCount > 1 ? "s" : ""}</span>`;
-        tableContainer.style.display = "block";
-        mobileCasesList.style.display = "";
+        const mobile = isMobileLayout();
+        tableContainer.style.display = mobile ? "none" : "block";
+        mobileCasesList.style.display = mobile ? "grid" : "none";
         toolbarZone.style.display = "flex";
         noFailuresState.style.display = "none";
 
@@ -901,6 +928,7 @@
         mobileCasesList.replaceChildren(...allCards);
 
         applyFilters();
+        updateResponsiveView();
       }
 
       // ===== MODULE + SUITE SIDEBAR =====
@@ -1207,10 +1235,15 @@
           .trim();
         const tbody = document.getElementById("failed-cases-body");
         const mobileCasesList = document.getElementById("mobile-cases-list");
+        const mobile = isMobileLayout();
         const orderedRows = getSortedRows();
         let visible = 0;
 
         tbody.innerHTML = "";
+        mobileCasesList.style.display = mobile ? "grid" : "none";
+        document.getElementById("table-container").style.display = mobile
+          ? "none"
+          : "block";
 
         orderedRows.forEach((row) => {
           let match = true;
