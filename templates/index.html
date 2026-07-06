@@ -375,7 +375,9 @@
           analyzeBtn.disabled = false;
           analyzeBtn.innerHTML =
             '<i class="fa-solid fa-play"></i> Analyzer maintenant';
-          alert("Erreur lors de l'analyse du fichier. Vérifie le format XML/HTML.");
+          alert(
+            "Erreur lors de l'analyse du fichier. Vérifie le format XML/HTML.",
+          );
           console.error(err);
         }
       }
@@ -430,13 +432,18 @@
           const suiteIdMap = new Map();
           root.querySelectorAll("suite").forEach((suite) => {
             const rawId = suite.getAttribute("id") || "";
-            const prefixedId = rawId ? `${moduleId}:${rawId}` : `${moduleId}:root`;
+            const prefixedId = rawId
+              ? `${moduleId}:${rawId}`
+              : `${moduleId}:root`;
             suiteIdMap.set(prefixedId, suite.getAttribute("name") || "");
           });
 
           root.querySelectorAll("test").forEach((test) => {
             const statusNode = getDirectChild(test, "status");
-            if (statusNode && (statusNode.getAttribute("status") || "") === "FAIL") {
+            if (
+              statusNode &&
+              (statusNode.getAttribute("status") || "") === "FAIL"
+            ) {
               const caseName = test.getAttribute("name") || "Cas inconnu";
 
               let errorMessage = (statusNode.textContent || "").trim();
@@ -445,7 +452,8 @@
                 if (msgNode && msgNode.textContent) {
                   errorMessage = msgNode.textContent.trim();
                 } else {
-                  errorMessage = "Échec sans message d'erreur précis dans le XML.";
+                  errorMessage =
+                    "Échec sans message d'erreur précis dans le XML.";
                 }
               }
 
@@ -462,10 +470,15 @@
                 .map((tag) => (tag.textContent || "").trim())
                 .filter(Boolean);
               const docNode = getDirectChild(test, "doc");
-              const documentation = docNode && docNode.textContent ? docNode.textContent.trim() : "";
+              const documentation =
+                docNode && docNode.textContent
+                  ? docNode.textContent.trim()
+                  : "";
 
               const rawSuitePathIds = getSuitePathIds(test);
-              const suitePathIds = rawSuitePathIds.map((sid) => `${moduleId}:${sid}`);
+              const suitePathIds = rawSuitePathIds.map(
+                (sid) => `${moduleId}:${sid}`,
+              );
               const suitePath = suitePathIds.map((sid) => ({
                 id: sid,
                 name: suiteIdMap.get(sid) || sid,
@@ -492,7 +505,7 @@
         } else if (ext === ".html") {
           const content = await file.text();
           const matches = content.matchAll(
-            /["']name["']:\s*["'](.*?)["'].*?["']status["']:\s*["']FAIL["'].*?["']message["']:\s*["'](.*?)["']/gsi,
+            /["']name["']:\s*["'](.*?)["'].*?["']status["']:\s*["']FAIL["'].*?["']message["']:\s*["'](.*?)["']/gis,
           );
 
           for (const match of matches) {
@@ -531,7 +544,10 @@
       }
 
       function parseXmlDocument(xmlText, filename) {
-        const xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+        const xmlDoc = new DOMParser().parseFromString(
+          xmlText,
+          "application/xml",
+        );
         if (xmlDoc.querySelector("parsererror")) {
           throw new Error(`XML invalide: ${filename}`);
         }
@@ -594,7 +610,10 @@
           getDirectChildren(el, "test").forEach((test) => {
             node.test_count += 1;
             const statusNode = getDirectChild(test, "status");
-            if (statusNode && (statusNode.getAttribute("status") || "") === "FAIL") {
+            if (
+              statusNode &&
+              (statusNode.getAttribute("status") || "") === "FAIL"
+            ) {
               node.fail_count += 1;
             }
           });
@@ -613,7 +632,9 @@
         const suiteId = node.id || "";
         node.id = suiteId ? `${moduleId}:${suiteId}` : `${moduleId}:root`;
 
-        (node.children || []).forEach((child) => prefixSuiteTreeIds(child, moduleId));
+        (node.children || []).forEach((child) =>
+          prefixSuiteTreeIds(child, moduleId),
+        );
       }
 
       function getSuitePathIds(testEl) {
@@ -647,11 +668,16 @@
 
         const failedKws = getDirectChildren(element, "kw").filter((kw) => {
           const statusNode = getDirectChild(kw, "status");
-          return statusNode && (statusNode.getAttribute("status") || "") === "FAIL";
+          return (
+            statusNode && (statusNode.getAttribute("status") || "") === "FAIL"
+          );
         });
 
         if (failedKws.length) {
-          return findFailedKeywordPath(failedKws[failedKws.length - 1], pathList);
+          return findFailedKeywordPath(
+            failedKws[failedKws.length - 1],
+            pathList,
+          );
         }
 
         return pathList;
@@ -696,7 +722,9 @@
             .filter(Boolean);
 
           const statusNode = getDirectChild(kw, "status");
-          const status = statusNode ? statusNode.getAttribute("status") || "PASS" : "PASS";
+          const status = statusNode
+            ? statusNode.getAttribute("status") || "PASS"
+            : "PASS";
           const elapsedStr = statusNode ? parseElapsed(statusNode) : "";
 
           let errorMsg = "";
@@ -712,7 +740,8 @@
             }
           }
 
-          const inFailedPath = failedPathSet.has(fullName) || failedPathSet.has(name);
+          const inFailedPath =
+            failedPathSet.has(fullName) || failedPathSet.has(name);
 
           steps.push({
             type: kwType,
@@ -1338,7 +1367,6 @@
           .replace(/\\/g, "\\\\")
           .replace(/'/g, "\\'");
       }
-
     </script>
   </body>
 </html>
