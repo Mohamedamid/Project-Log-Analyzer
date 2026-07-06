@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Log Analyzer</title>
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="../static/style.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -345,7 +345,7 @@
           .join("");
       }
 
-      function analyzeQueuedFiles() {
+      async function analyzeQueuedFiles() {
         if (!queuedFiles.length) {
           alert("Ajoute d'abord au moins un fichier (.xml/.html).");
           return;
@@ -356,34 +356,376 @@
         analyzeBtn.innerHTML =
           '<i class="fa-solid fa-spinner fa-spin"></i> Analyse...';
 
-        const formData = new FormData();
-        queuedFiles.forEach((file) => formData.append("files", file));
-
         document.getElementById("loader").style.display = "block";
         document.getElementById("results").style.display = "none";
 
-        fetch("/analyze", { method: "POST", body: formData })
-          .then((r) => r.json())
-          .then((data) => {
-            document.getElementById("loader").style.display = "none";
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML =
-              '<i class="fa-solid fa-play"></i> Analyzer maintenant';
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-            clearQueuedFiles();
-            displayResults(data);
-          })
-          .catch((err) => {
-            document.getElementById("loader").style.display = "none";
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML =
-              '<i class="fa-solid fa-play"></i> Analyzer maintenant';
-            alert("Erreur lors de l'analyse. Vérifie le backend.");
-            console.error(err);
+        try {
+          const fileResults = await Promise.all(
+            queuedFiles.map((file, index) => analyzeFile(file, index + 1)),
+          );
+          const data = mergeAnalysisResults(fileResults);
+          document.getElementById("loader").style.display = "none";
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerHTML =
+            '<i class="fa-solid fa-play"></i> Analyzer maintenant';
+          clearQueuedFiles();
+          displayResults(data);
+        } catch (err) {
+          document.getElementById("loader").style.display = "none";
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerHTML =
+            '<i class="fa-solid fa-play"></i> Analyzer maintenant';
+          alert("Erreur lors de l'analyse du fichier. Vérifie le format XML/HTML.");
+          console.error(err);
+        }
+      }
+
+      function mergeAnalysisResults(fileResults) {
+        const failures = [];
+        const modules = [];
+
+        fileResults.forEach((result) => {
+          if (result.module) {
+            modules.push(result.module);
+          }
+          if (result.failures && result.failures.length) {
+            failures.push(...result.failures);
+          }
+        });
+
+        return {
+          failed_count: failures.length,
+          failures,
+          modules,
+        };
+      }
+
+      async function analyzeFile(file, fileIndex) {
+        const filename = file.name || `module_${fileIndex}`;
+        const ext = filename.toLowerCase().slice(filename.lastIndexOf("."));
+        const moduleId = `m${fileIndex}`;
+        let moduleName = guessModuleNameFromFilename(filename, fileIndex);
+        let moduleFailedCount = 0;
+        let moduleSuiteTree = {};
+        let moduleTestCount = 0;
+        const failures = [];
+
+        if (ext === ".xml") {
+          const xmlText = await file.text();
+          const xmlDoc = parseXmlDocument(xmlText, filename);
+          const root = xmlDoc.documentElement;
+
+          const topSuite = getDirectChildren(root, "suite")[0];
+          const topSuiteName = (topSuite?.getAttribute("name") || "").trim();
+          if (topSuiteName) {
+            moduleName = topSuiteName;
+          }
+
+          moduleSuiteTree = extractSuiteTree(root);
+          if (moduleSuiteTree) {
+            moduleTestCount = moduleSuiteTree.test_count || 0;
+            prefixSuiteTreeIds(moduleSuiteTree, moduleId);
+          }
+
+          const suiteIdMap = new Map();
+          root.querySelectorAll("suite").forEach((suite) => {
+            const rawId = suite.getAttribute("id") || "";
+            const prefixedId = rawId ? `${moduleId}:${rawId}` : `${moduleId}:root`;
+            suiteIdMap.set(prefixedId, suite.getAttribute("name") || "");
           });
+
+          root.querySelectorAll("test").forEach((test) => {
+            const statusNode = getDirectChild(test, "status");
+            if (statusNode && (statusNode.getAttribute("status") || "") === "FAIL") {
+              const caseName = test.getAttribute("name") || "Cas inconnu";
+
+              let errorMessage = (statusNode.textContent || "").trim();
+              if (!errorMessage) {
+                const msgNode = test.querySelector("msg[status='FAIL']");
+                if (msgNode && msgNode.textContent) {
+                  errorMessage = msgNode.textContent.trim();
+                } else {
+                  errorMessage = "Échec sans message d'erreur précis dans le XML.";
+                }
+              }
+
+              const pathList = findFailedKeywordPath(test);
+              const failedKeywordPath = pathList.length
+                ? pathList.join(" ➔ ")
+                : "Keyword inconnu";
+
+              const timeline = extractTimeline(test);
+              const elapsedTotal = parseElapsed(statusNode);
+              const startTime = statusNode.getAttribute("starttime") || "";
+
+              const tags = getDirectChildren(test, "tag")
+                .map((tag) => (tag.textContent || "").trim())
+                .filter(Boolean);
+              const docNode = getDirectChild(test, "doc");
+              const documentation = docNode && docNode.textContent ? docNode.textContent.trim() : "";
+
+              const rawSuitePathIds = getSuitePathIds(test);
+              const suitePathIds = rawSuitePathIds.map((sid) => `${moduleId}:${sid}`);
+              const suitePath = suitePathIds.map((sid) => ({
+                id: sid,
+                name: suiteIdMap.get(sid) || sid,
+              }));
+
+              failures.push({
+                module_id: moduleId,
+                module_name: moduleName,
+                source_file: filename,
+                case_name: caseName,
+                keyword: failedKeywordPath,
+                error_message: errorMessage,
+                timeline,
+                start_time: startTime,
+                elapsed: elapsedTotal,
+                tags,
+                documentation,
+                suite_path: suitePath,
+                suite_ids: suitePathIds,
+              });
+              moduleFailedCount += 1;
+            }
+          });
+        } else if (ext === ".html") {
+          const content = await file.text();
+          const matches = content.matchAll(
+            /["']name["']:\s*["'](.*?)["'].*?["']status["']:\s*["']FAIL["'].*?["']message["']:\s*["'](.*?)["']/gsi,
+          );
+
+          for (const match of matches) {
+            failures.push({
+              module_id: moduleId,
+              module_name: moduleName,
+              source_file: filename,
+              case_name: match[1],
+              keyword: "Analyse via XML recommandée pour voir l'arborescence",
+              error_message: match[2],
+              timeline: [],
+              start_time: "",
+              elapsed: "",
+              tags: [],
+              documentation: "",
+              suite_path: [],
+              suite_ids: [],
+            });
+            moduleFailedCount += 1;
+          }
+        } else {
+          throw new Error(`Format non supporté: ${filename}`);
+        }
+
+        return {
+          module: {
+            id: moduleId,
+            name: moduleName,
+            source_file: filename,
+            failed_count: moduleFailedCount,
+            test_count: moduleTestCount,
+            suite_tree: moduleSuiteTree,
+          },
+          failures,
+        };
+      }
+
+      function parseXmlDocument(xmlText, filename) {
+        const xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+        if (xmlDoc.querySelector("parsererror")) {
+          throw new Error(`XML invalide: ${filename}`);
+        }
+        return xmlDoc;
+      }
+
+      function getDirectChildren(element, tagName) {
+        if (!element) {
+          return [];
+        }
+        return Array.from(element.children || []).filter(
+          (child) => child.tagName === tagName,
+        );
+      }
+
+      function getDirectChild(element, tagName) {
+        return getDirectChildren(element, tagName)[0] || null;
+      }
+
+      function guessModuleNameFromFilename(filename, fallbackIndex) {
+        const stem = filename
+          .replace(/\\/g, "/")
+          .split("/")
+          .pop()
+          .replace(/\.[^.]+$/, "")
+          .trim();
+        if (!stem) {
+          return `Module ${fallbackIndex}`;
+        }
+
+        if (/^output\d*$/i.test(stem)) {
+          return `Module ${fallbackIndex}`;
+        }
+
+        return stem.replace(/[_\-]+/g, " ").trim();
+      }
+
+      function extractSuiteTree(rootEl) {
+        const top = getDirectChildren(rootEl, "suite")[0];
+        if (!top) {
+          return {};
+        }
+
+        function walk(el) {
+          const node = {
+            id: el.getAttribute("id") || "",
+            name: el.getAttribute("name") || "",
+            children: [],
+            test_count: 0,
+            fail_count: 0,
+          };
+
+          getDirectChildren(el, "suite").forEach((suite) => {
+            const child = walk(suite);
+            node.children.push(child);
+            node.test_count += child.test_count;
+            node.fail_count += child.fail_count;
+          });
+
+          getDirectChildren(el, "test").forEach((test) => {
+            node.test_count += 1;
+            const statusNode = getDirectChild(test, "status");
+            if (statusNode && (statusNode.getAttribute("status") || "") === "FAIL") {
+              node.fail_count += 1;
+            }
+          });
+
+          return node;
+        }
+
+        return walk(top);
+      }
+
+      function prefixSuiteTreeIds(node, moduleId) {
+        if (!node) {
+          return;
+        }
+
+        const suiteId = node.id || "";
+        node.id = suiteId ? `${moduleId}:${suiteId}` : `${moduleId}:root`;
+
+        (node.children || []).forEach((child) => prefixSuiteTreeIds(child, moduleId));
+      }
+
+      function getSuitePathIds(testEl) {
+        const testId = testEl.getAttribute("id") || "";
+        const parts = testId.split("-");
+        const path = [];
+        let current = "";
+
+        parts.forEach((part) => {
+          if (part.startsWith("t")) {
+            return;
+          }
+          current = current ? `${current}-${part}` : part;
+          path.push(current);
+        });
+
+        return path;
+      }
+
+      function findFailedKeywordPath(element, pathList = []) {
+        if (!element) {
+          return pathList;
+        }
+
+        if (element.tagName === "kw") {
+          const lib = element.getAttribute("library") || "";
+          const name = element.getAttribute("name") || "";
+          const fullName = lib ? `${lib}.${name}` : name;
+          pathList.push(fullName);
+        }
+
+        const failedKws = getDirectChildren(element, "kw").filter((kw) => {
+          const statusNode = getDirectChild(kw, "status");
+          return statusNode && (statusNode.getAttribute("status") || "") === "FAIL";
+        });
+
+        if (failedKws.length) {
+          return findFailedKeywordPath(failedKws[failedKws.length - 1], pathList);
+        }
+
+        return pathList;
+      }
+
+      function parseElapsed(statusNode) {
+        if (!statusNode) {
+          return "";
+        }
+
+        const elapsed = statusNode.getAttribute("elapsed") || "";
+        if (elapsed) {
+          const ms = Number(elapsed);
+          if (Number.isFinite(ms)) {
+            if (ms < 1000) {
+              return `${ms}ms`;
+            }
+            if (ms < 60000) {
+              return `${(ms / 1000).toFixed(3)}s`;
+            }
+            const s = Math.floor(ms / 1000);
+            return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}s`;
+          }
+        }
+
+        return elapsed || "";
+      }
+
+      function extractTimeline(testElement) {
+        const steps = [];
+        const failedPath = findFailedKeywordPath(testElement);
+        const failedPathSet = new Set(failedPath);
+
+        getDirectChildren(testElement, "kw").forEach((kw) => {
+          const kwType = kw.getAttribute("type") || "kw";
+          const lib = kw.getAttribute("library") || "";
+          const name = kw.getAttribute("name") || "";
+          const fullName = lib ? `${lib}.${name}` : name;
+
+          const args = getDirectChildren(kw, "arg")
+            .map((arg) => (arg.textContent || "").trim())
+            .filter(Boolean);
+
+          const statusNode = getDirectChild(kw, "status");
+          const status = statusNode ? statusNode.getAttribute("status") || "PASS" : "PASS";
+          const elapsedStr = statusNode ? parseElapsed(statusNode) : "";
+
+          let errorMsg = "";
+          if (status === "FAIL") {
+            const failMsg = kw.querySelector("msg[level='FAIL']");
+            if (failMsg && failMsg.textContent) {
+              errorMsg = failMsg.textContent.trim();
+            } else {
+              const anyMsg = kw.querySelector("msg");
+              if (anyMsg && anyMsg.textContent) {
+                errorMsg = anyMsg.textContent.trim();
+              }
+            }
+          }
+
+          const inFailedPath = failedPathSet.has(fullName) || failedPathSet.has(name);
+
+          steps.push({
+            type: kwType,
+            name: fullName,
+            args,
+            status,
+            elapsed: elapsedStr,
+            in_failed_path: inFailedPath,
+            error_msg: errorMsg,
+          });
+        });
+
+        return steps;
       }
 
       renderQueuedFiles();
@@ -997,39 +1339,6 @@
           .replace(/'/g, "\\'");
       }
 
-      // فاش كتكون كـ loopي على الـ failures
-failures.forEach(item => {
-    // 1. توليد ID فريد للكاس
-    const caseId = btoa(item.case_name + item.module_id);
-    // 2. واش هاد الكاس ديجا "تقاد"؟
-    const isFixed = JSON.parse(localStorage.getItem('fixed_' + caseId) || 'false');
-    
-    const row = document.createElement('tr');
-    if (isFixed) row.classList.add('row-fixed'); // تطبيق الستيل إلا كان مقاد
-    
-    row.innerHTML = `
-        <td><input type="checkbox" class="fix-checkbox" ${isFixed ? 'checked' : ''} onchange="toggleFix(this, '${caseId}')"></td>
-        <td>${escH(item.case_name)}</td>
-        <td>${escH(item.error_message)}</td>
-        `;
-    tableBody.appendChild(row);
-});
-
-// 3. زيد هاد الفونكسيون فـ اللخر ديال السكريبت باش تحفظ الحالة
-    function toggleFix(checkbox, id) {
-        const row = checkbox.closest('tr');
-        const isChecked = checkbox.checked;
-        
-        // حفظ فـ localStorage
-        localStorage.setItem('fixed_' + id, JSON.stringify(isChecked));
-        
-        // تبديل الستيل
-        if (isChecked) {
-            row.classList.add('row-fixed');
-        } else {
-            row.classList.remove('row-fixed');
-        }
-    }
     </script>
   </body>
 </html>
