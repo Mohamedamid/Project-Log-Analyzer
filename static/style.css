@@ -1399,12 +1399,13 @@ tbody tr:hover .case-detail-hint {
 
 @media (max-width: 768px) {
   body {
-    padding: 12px 10px 28px;
+    padding: 8px;
   }
 
   .container {
-    padding: 16px 12px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   }
 
   .dashboard-header,
@@ -1418,7 +1419,9 @@ tbody tr:hover .case-detail-hint {
   }
 
   .dashboard-header {
-    gap: 14px;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
   }
 
   .header-left,
@@ -1447,6 +1450,19 @@ tbody tr:hover .case-detail-hint {
     max-width: none;
   }
 
+  .search-box input {
+    height: 46px;
+    border-radius: 14px;
+    padding-left: 42px;
+    font-size: 14px;
+    background: linear-gradient(180deg, var(--surface), var(--surface2));
+  }
+
+  .search-box .search-icon {
+    left: 14px;
+    font-size: 16px;
+  }
+
   .sort-controls select,
   .export-btn,
   .queue-btn,
@@ -1455,17 +1471,39 @@ tbody tr:hover .case-detail-hint {
   }
 
   .drop-zone {
-    padding: 28px 14px;
+    padding: 20px 12px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .drop-zone::before {
+    content: "";
+    display: block;
+    height: 4px;
+    width: 72px;
+    border-radius: 999px;
+    margin: 0 auto 14px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+    opacity: 0.9;
+  }
+
+  .drop-zone:hover,
+  .drop-zone--over {
+    transform: translateY(-1px);
   }
 
   .queue-panel {
-    padding: 10px;
+    padding: 12px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--surface), var(--surface2));
   }
 
   .queued-file-item {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
   }
 
   .queued-file-main {
@@ -1500,14 +1538,27 @@ tbody tr:hover .case-detail-hint {
   }
 
   .mobile-case-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px;
-    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, var(--primary-light) 8%), var(--surface));
+    border: 1px solid color-mix(in srgb, var(--border) 82%, var(--primary) 18%);
+    border-radius: 20px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+  }
+
+  .mobile-case-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), #22c55e);
   }
 
   .mobile-case-card__header {
@@ -1517,23 +1568,68 @@ tbody tr:hover .case-detail-hint {
     gap: 12px;
   }
 
+  .mobile-case-card__header .case-module-tag {
+    margin-bottom: 8px;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 9px;
+    letter-spacing: 0.7px;
+    background: color-mix(in srgb, var(--primary-light) 78%, #ffffff 22%);
+  }
+
+  .mobile-case-card .case-title {
+    font-size: 14px;
+    line-height: 1.45;
+    margin-top: 1px;
+  }
+
+  .mobile-case-card .case-suite-path {
+    margin-bottom: 0;
+    font-size: 11px;
+    opacity: 0.9;
+  }
+
+  .mobile-case-card .case-detail-hint {
+    font-size: 10px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    white-space: nowrap;
+    margin-top: 0;
+    align-self: flex-start;
+  }
+
   .mobile-case-card__keywords {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
 
+  .mobile-case-card__keywords .kw-parent,
+  .mobile-case-card__keywords .kw-child {
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 11px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .mobile-case-card__keywords .kw-arrow {
+    text-align: center;
+    padding-left: 0;
+    margin: -1px 0;
+  }
+
   .mobile-case-card__error {
-    border: 1px solid var(--error-border);
-    background: var(--error-bg);
+    border: 1px solid color-mix(in srgb, var(--error-border) 72%, var(--surface) 28%);
+    background: linear-gradient(180deg, var(--error-bg), color-mix(in srgb, var(--error-bg) 85%, var(--surface) 15%));
     color: var(--error-text);
-    border-radius: 10px;
-    padding: 10px 12px;
+    border-radius: 14px;
+    padding: 11px 12px;
   }
 
   .mobile-case-card__label {
     display: block;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -1544,7 +1640,7 @@ tbody tr:hover .case-detail-hint {
   .mobile-case-card__error p {
     margin: 0;
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.55;
     word-break: break-word;
   }
 
@@ -1570,8 +1666,8 @@ tbody tr:hover .case-detail-hint {
 
   .detail-panel__header,
   .detail-section {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .detail-panel__header h2 {
