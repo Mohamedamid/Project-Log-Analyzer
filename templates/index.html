@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="dashboard-header">
+        <div class="header-left">
+          <div>
+            <h1>Log Analyzer</h1>
+            <p>Analyse intelligente des échecs Robot Framework</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button
+            id="theme-toggle"
+            class="theme-btn"
+            aria-label="Changer de thème"
+          >
+            <span class="icon-sun">☀️ Light</span>
+            <span class="icon-moon" style="display: none">🌙 Dark</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- DROP ZONE -->
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-icon-wrap">📂</div>
+        <span class="drop-zone__prompt"
+          >Glissez vos rapports de test ici (multi-fichiers)</span
+        >
+        <span class="drop-zone__subtext"
+          >ou cliquez pour sélectionner plusieurs fichiers</span
+        >
+        <div class="file-types">
+          <span class="file-badge">output.xml</span>
+        </div>
+        <input
+          type="file"
+          name="files"
+          id="file-input"
+          class="drop-zone__input"
+          accept=".html,.xml"
+          multiple
+        />
+
+        <div class="queue-panel" id="queue-panel">
+          <div class="queue-head">
+            <strong id="queue-count">0 fichier ajouté</strong>
+          </div>
+          <div class="queue-actions">
+            <button
+              class="queue-btn queue-btn--ghost"
+              type="button"
+              onclick="clearQueuedFiles()"
+            >
+              <i class="fa-solid fa-trash"></i> Vider
+            </button>
+            <button
+              class="queue-btn queue-btn--primary"
+              type="button"
+              onclick="analyzeQueuedFiles()"
+            >
+              <i class="fa-solid fa-play"></i> Analyzer maintenant
+            </button>
+          </div>
+          <div id="queued-files-list" class="queued-files-list"></div>
+        </div>
+      </div>
+
+      <!-- LOADER -->
+      <div id="loader" class="loader-container" style="display: none">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+        <p>Analyse des logs en cours...</p>
+      </div>
+
+      <!-- RESULTS: sidebar + table -->
+      <div id="results" style="display: none">
+        <div class="results-header">
+          <h2>Résultats de l'analyse</h2>
+          <div id="summary" class="badge-failed"></div>
+        </div>
+
+        <div class="results-layout">
+          <!-- SIDEBAR suite tree -->
+          <aside class="suite-sidebar" id="suite-sidebar">
+            <div class="suite-sidebar__title">
+              <i class="fa-solid fa-cubes"></i> Modules
+            </div>
+            <div id="suite-tree"></div>
+          </aside>
+
+          <!-- MAIN: toolbar + table -->
+          <div class="results-main">
+            <div class="toolbar" id="toolbar-zone">
+              <div class="search-box">
+                <span class="search-icon"
+                  ><i class="fa-solid fa-magnifying-glass"></i
+                ></span>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Rechercher un cas, keyword, erreur..."
+                  oninput="applyFilters()"
+                />
+              </div>
+              <div class="sort-controls">
+                <select id="sort-field" onchange="onSortChange()">
+                  <option value="">Tri: Aucun</option>
+                  <option value="module">Module</option>
+                  <option value="case">Cas de test</option>
+                  <option value="keyword">Keyword</option>
+                  <option value="parentKeyword">Keyword parent</option>
+                  <option value="error">Erreur</option>
+                </select>
+                <select id="sort-dir" onchange="onSortChange()">
+                  <option value="asc">A → Z</option>
+                  <option value="desc">Z → A</option>
+                </select>
+                <button class="export-btn" type="button" onclick="clearSort()">
+                  <i class="fa-solid fa-filter-circle-xmark"></i> Annuler tri
+                </button>
+              </div>
+              <!-- breadcrumb actif -->
+              <div
+                id="active-filter-crumb"
+                class="active-crumb"
+                style="display: none"
+              >
+                <span id="crumb-label"></span>
+                <button
+                  onclick="clearSuiteFilter()"
+                  title="Réinitialiser le filtre"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <span class="results-count" id="results-count"></span>
+            </div>
+
+            <div
+              id="keyword-groups"
+              class="keyword-groups"
+              style="display: none"
+            ></div>
+
+            <div class="table-wrapper" id="table-container">
+              <table id="failed-cases-table">
+                <thead>
+                  <tr>
+                    <th style="width: 18%">Cas de Test</th>
+                    <th style="width: 27%">Keyword en Échec</th>
+                    <th style="width: 55%">Message d'Erreur</th>
+                  </tr>
+                </thead>
+                <tbody id="failed-cases-body"></tbody>
+              </table>
+            </div>
+
+            <div
+              id="no-failures-state"
+              class="empty-state"
+              style="display: none; text-align: center; padding: 40px"
+            >
+              <div style="font-size: 40px; margin-bottom: 10px">🎉</div>
+              <h3 style="color: #2ecc71; margin-bottom: 5px">
+                Excellent ! Aucun échec détecté
+              </h3>
+              <p style="color: #7f8c8d; margin: 0">
+                Tous vos cas de test sont passés avec succès.
+              </p>
+            </div>
+
+            <div id="empty-search" class="empty-state" style="display: none">
+              <p>Aucun résultat pour cette recherche.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div
+      id="detail-overlay"
+      class="detail-overlay"
+      onclick="closeDetail()"
+    ></div>
+    <aside id="detail-panel" class="detail-panel">
+      <div class="detail-panel__header">
+        <div style="flex: 1; min-width: 0">
+          <div class="dp-breadcrumb" id="dp-breadcrumb"></div>
+          <h2 id="dp-title"></h2>
+          <div id="dp-meta" class="dp-meta-row"></div>
+        </div>
+        <button
+          class="detail-close-btn"
+          onclick="closeDetail()"
+          aria-label="Fermer"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="dp-doc-section" class="detail-section" style="display: none">
+        <div class="detail-label">
+          <i class="fa-solid fa-file-lines"></i> Documentation
+        </div>
+        <div id="dp-doc" class="dp-doc-text"></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">
+          <i class="fa-solid fa-list-check"></i> Exécution des Steps
+        </div>
+        <div id="dp-timeline" class="dp-timeline"></div>
+      </div>
+    </aside>
+
+    <script>
+      // ===== THEME =====
+      const body = document.body;
+      const themeToggle = document.getElementById("theme-toggle");
+      const saved = localStorage.getItem("theme") || "light";
+      if (saved === "dark") {
+        body.className = "dark-mode";
+        updateThemeBtn(true);
+      }
+      themeToggle.addEventListener("click", () => {
+        const dark = body.className !== "dark-mode";
+        body.className = dark ? "dark-mode" : "";
+        localStorage.setItem("theme", dark ? "dark" : "light");
+        updateThemeBtn(dark);
+      });
+      function updateThemeBtn(isDark) {
+        themeToggle.querySelector(".icon-sun").style.display = isDark
+          ? "none"
+          : "inline";
+        themeToggle.querySelector(".icon-moon").style.display = isDark
+          ? "inline"
+          : "none";
+      }
+
+      // ===== DROP ZONE =====
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+      const queuePanel = document.getElementById("queue-panel");
+      dropZone.addEventListener("click", () => fileInput.click());
+      queuePanel.addEventListener("click", (e) => e.stopPropagation());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drop-zone--over");
+      });
+      ["dragleave", "dragend"].forEach((t) =>
+        dropZone.addEventListener(t, () =>
+          dropZone.classList.remove("drop-zone--over"),
+        ),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files || []);
+        if (files.length) addFilesToQueue(files);
+        dropZone.classList.remove("drop-zone--over");
+      });
+      fileInput.addEventListener("change", () => {
+        const files = Array.from(fileInput.files || []);
+        if (files.length) addFilesToQueue(files);
+        fileInput.value = "";
+      });
+
+      // ===== STATE =====
+      let queuedFiles = [];
+      let allRows = [];
+      let activeSuiteId = null;
+      let activeSuiteName = null;
+      let activeModuleId = null;
+      let activeModuleName = null;
+      let activeParentKeyword = null;
+      let sortState = { field: "", dir: "asc" };
+      let _currentDetailIdx = null;
+
+      // ===== UPLOAD =====
+      function getFileKey(file) {
+        return `${file.name}::${file.size}::${file.lastModified}`;
+      }
+
+      function addFilesToQueue(files) {
+        const allowedExt = [".xml", ".html"];
+        const existingKeys = new Set(queuedFiles.map((f) => getFileKey(f)));
+
+        files.forEach((file) => {
+          const lowerName = (file.name || "").toLowerCase();
+          const ext = lowerName.slice(lowerName.lastIndexOf("."));
+          const key = getFileKey(file);
+          if (!allowedExt.includes(ext)) return;
+          if (existingKeys.has(key)) return;
+          queuedFiles.push(file);
+          existingKeys.add(key);
+        });
+
+        renderQueuedFiles();
+      }
+
+      function removeQueuedFile(fileKey) {
+        queuedFiles = queuedFiles.filter((f) => getFileKey(f) !== fileKey);
+        renderQueuedFiles();
+      }
+
+      function clearQueuedFiles() {
+        queuedFiles = [];
+        renderQueuedFiles();
+      }
+
+      function renderQueuedFiles() {
+        const countEl = document.getElementById("queue-count");
+        const listEl = document.getElementById("queued-files-list");
+        const total = queuedFiles.length;
+
+        countEl.textContent = `${total} fichier${total > 1 ? "s" : ""} ajouté${total > 1 ? "s" : ""}`;
+
+        listEl.innerHTML = queuedFiles
+          .map((file) => {
+            const key = escHAttr(getFileKey(file));
+            const sizeKb = Math.max(1, Math.round(file.size / 1024));
+            return `
+              <div class="queued-file-item">
+                <div class="queued-file-main">
+                  <i class="fa-regular fa-file-lines"></i>
+                  <span class="queued-file-name">${escH(file.name)}</span>
+                  <span class="queued-file-size">${sizeKb} KB</span>
+                </div>
+                <button class="queued-remove" type="button" onclick="removeQueuedFile('${key}')">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function analyzeQueuedFiles() {
+        if (!queuedFiles.length) {
+          alert("Ajoute d'abord au moins un fichier (.xml/.html).");
+          return;
+        }
+
+        const analyzeBtn = document.querySelector(".queue-btn--primary");
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin"></i> Analyse...';
+
+        const formData = new FormData();
+        queuedFiles.forEach((file) => formData.append("files", file));
+
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("results").style.display = "none";
+
+        fetch("/analyze", { method: "POST", body: formData })
+          .then((r) => r.json())
+          .then((data) => {
+            document.getElementById("loader").style.display = "none";
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML =
+              '<i class="fa-solid fa-play"></i> Analyzer maintenant';
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            clearQueuedFiles();
+            displayResults(data);
+          })
+          .catch((err) => {
+            document.getElementById("loader").style.display = "none";
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML =
+              '<i class="fa-solid fa-play"></i> Analyzer maintenant';
+            alert("Erreur lors de l'analyse. Vérifie le backend.");
+            console.error(err);
+          });
+      }
+
+      renderQueuedFiles();
+
+      // ===== DISPLAY =====
+      function displayResults(data) {
+        document.getElementById("results").style.display = "block";
+        document.getElementById("search-input").value = "";
+        document.getElementById("sort-field").value = "";
+        document.getElementById("sort-dir").value = "asc";
+
+        activeSuiteId = null;
+        activeSuiteName = null;
+        activeModuleId = null;
+        activeModuleName = null;
+        activeParentKeyword = null;
+        sortState = { field: "", dir: "asc" };
+
+        const summaryEl = document.getElementById("summary");
+        const tableContainer = document.getElementById("table-container");
+        const toolbarZone = document.getElementById("toolbar-zone");
+        const noFailuresState = document.getElementById("no-failures-state");
+        const tbody = document.getElementById("failed-cases-body");
+        const keywordGroupsEl = document.getElementById("keyword-groups");
+
+        tbody.innerHTML = "";
+        allRows = [];
+        window._failures = data.failures || [];
+
+        buildModuleTree(data.modules || [], data.failures || []);
+        renderKeywordGroups(data.failures || []);
+
+        if (data.failed_count === 0) {
+          summaryEl.className = "badge-success";
+          summaryEl.innerHTML = "<span>0 Échec Détecté</span>";
+          tableContainer.style.display = "none";
+          toolbarZone.style.display = "none";
+          keywordGroupsEl.style.display = "none";
+          noFailuresState.style.display = "block";
+          updateCount(0);
+          return;
+        }
+
+        const moduleCount = (data.modules || []).length;
+        summaryEl.className = "badge-failed";
+        summaryEl.innerHTML = `<span>${data.failed_count} Échecs Détectés · ${moduleCount} module${moduleCount > 1 ? "s" : ""}</span>`;
+        tableContainer.style.display = "block";
+        toolbarZone.style.display = "flex";
+        noFailuresState.style.display = "none";
+
+        (data.failures || []).forEach((item, idx) => {
+          const row = document.createElement("tr");
+          const kws = (item.keyword || "").split(" ➔ ");
+          const parentKeyword = (kws[0] || item.keyword || "inconnu").trim();
+
+          row.dataset.case = (item.case_name || "").toLowerCase();
+          row.dataset.keyword = (item.keyword || "").toLowerCase();
+          row.dataset.error = (item.error_message || "").toLowerCase();
+          row.dataset.module = (item.module_name || "").toLowerCase();
+          row.dataset.moduleId = item.module_id || "";
+          row.dataset.parentKeyword = parentKeyword.toLowerCase();
+          row.dataset.suiteIds = JSON.stringify(item.suite_ids || []);
+          row.style.cursor = "pointer";
+
+          const kwHTML =
+            kws.length > 1
+              ? `<div class="kw-parent">${escH(kws[0])}</div>
+               <div class="kw-arrow"><i class="fa-solid fa-arrow-down fa-xs"></i></div>
+               <div class="kw-child">${escH(kws[kws.length - 1])}</div>`
+              : `<div class="kw-child">${escH(item.keyword)}</div>`;
+
+          const suitePath = (item.suite_path || [])
+            .slice(1)
+            .map((s) => escH(s.name))
+            .join(" › ");
+          const moduleLabel = escH(item.module_name || "Module inconnu");
+
+          row.innerHTML = `
+            <td class="case-name-cell">
+                <div class="case-module-tag">${moduleLabel}</div>
+                <div class="case-suite-path">${suitePath || "Suite non disponible"}</div>
+                <div class="case-title">${escH(item.case_name)}</div>
+                <div class="case-detail-hint"><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i> Voir détails</div>
+            </td>
+            <td class="keyword-cell">${kwHTML}</td>
+            <td class="error-cell"><pre>${escH(item.error_message)}</pre></td>`;
+
+          row.addEventListener("click", () => openDetail(idx));
+          allRows.push(row);
+        });
+
+        applyFilters();
+      }
+
+      // ===== MODULE + SUITE SIDEBAR =====
+      function buildModuleTree(modules, failures) {
+        const sidebarEl = document.getElementById("suite-sidebar");
+        const treeEl = document.getElementById("suite-tree");
+        treeEl.innerHTML = "";
+
+        if (!modules.length) {
+          sidebarEl.style.display = "none";
+          return;
+        }
+
+        sidebarEl.style.display = "flex";
+
+        const allItem = document.createElement("div");
+        allItem.className = "suite-item suite-item--all active";
+        allItem.dataset.filterType = "all";
+        allItem.innerHTML = `
+        <span class="suite-item__icon"><i class="fa-solid fa-layer-group"></i></span>
+        <span class="suite-item__name">Tout afficher</span>
+        <span class="suite-badge suite-badge--fail">${failures.length}</span>`;
+        allItem.addEventListener("click", () => {
+          activeModuleId = null;
+          activeModuleName = null;
+          activeSuiteId = null;
+          activeSuiteName = null;
+          refreshSidebarActiveState();
+          updateCrumb();
+          applyFilters();
+        });
+        treeEl.appendChild(allItem);
+
+        modules.forEach((module) => {
+          const moduleWrap = document.createElement("div");
+
+          const moduleItem = document.createElement("div");
+          moduleItem.className = "suite-item suite-item--depth1 module-item";
+          moduleItem.dataset.filterType = "module";
+          moduleItem.dataset.moduleId = module.id;
+
+          const hasChildren =
+            module.suite_tree &&
+            module.suite_tree.children &&
+            module.suite_tree.children.length > 0;
+          moduleItem.innerHTML = `
+            <span class="suite-chevron module-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            <span class="suite-item__icon"><i class="fa-solid fa-cube"></i></span>
+            <span class="suite-item__name">${escH(module.name)}</span>
+            <span class="suite-badge suite-badge--fail">${module.failed_count || 0}</span>`;
+
+          const childrenContainer = document.createElement("div");
+          childrenContainer.className = "module-children";
+
+          moduleItem.addEventListener("click", () => {
+            activeModuleId = module.id;
+            activeModuleName = module.name;
+            activeSuiteId = null;
+            activeSuiteName = null;
+            refreshSidebarActiveState();
+            updateCrumb();
+            applyFilters();
+
+            if (hasChildren) {
+              childrenContainer.classList.toggle("collapsed");
+              const chev = moduleItem.querySelector(".module-chevron i");
+              chev.className = childrenContainer.classList.contains("collapsed")
+                ? "fa-solid fa-chevron-right"
+                : "fa-solid fa-chevron-down";
+            }
+          });
+
+          if (!hasChildren) {
+            const chev = moduleItem.querySelector(".module-chevron");
+            chev.style.visibility = "hidden";
+          }
+
+          moduleWrap.appendChild(moduleItem);
+
+          if (hasChildren) {
+            renderSuiteNodes(
+              module.suite_tree.children,
+              childrenContainer,
+              module.id,
+              module.name,
+              2,
+            );
+          }
+
+          moduleWrap.appendChild(childrenContainer);
+          treeEl.appendChild(moduleWrap);
+        });
+      }
+
+      function renderSuiteNodes(nodes, parentEl, moduleId, moduleName, depth) {
+        (nodes || []).forEach((node) => {
+          const item = document.createElement("div");
+          item.className = `suite-item suite-item--depth${Math.min(depth, 2)}`;
+          item.dataset.filterType = "suite";
+          item.dataset.suiteId = node.id;
+          item.dataset.moduleId = moduleId;
+          if ((node.fail_count || 0) === 0)
+            item.classList.add("suite-item--no-fail");
+
+          const hasChildren = node.children && node.children.length > 0;
+          item.innerHTML = `
+            <span class="suite-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            <span class="suite-item__icon"><i class="fa-regular fa-folder"></i></span>
+            <span class="suite-item__name">${escH(node.name || "Suite")}</span>
+            ${
+              (node.fail_count || 0) > 0
+                ? `<span class="suite-badge suite-badge--fail">${node.fail_count}</span>`
+                : '<span class="suite-badge suite-badge--pass">✓</span>'
+            }`;
+
+          const children = document.createElement("div");
+          children.className = "suite-children";
+
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            activeModuleId = moduleId;
+            activeModuleName = moduleName;
+            activeSuiteId = node.id;
+            activeSuiteName = node.name || "Suite";
+            refreshSidebarActiveState();
+            updateCrumb();
+            applyFilters();
+
+            if (hasChildren) {
+              children.classList.toggle("collapsed");
+              const chev = item.querySelector(".suite-chevron i");
+              chev.className = children.classList.contains("collapsed")
+                ? "fa-solid fa-chevron-right"
+                : "fa-solid fa-chevron-down";
+            }
+          });
+
+          if (!hasChildren) {
+            item.querySelector(".suite-chevron").style.visibility = "hidden";
+          } else {
+            renderSuiteNodes(
+              node.children,
+              children,
+              moduleId,
+              moduleName,
+              depth + 1,
+            );
+          }
+
+          parentEl.appendChild(item);
+          parentEl.appendChild(children);
+        });
+      }
+
+      function refreshSidebarActiveState() {
+        document.querySelectorAll(".suite-item").forEach((el) => {
+          const type = el.dataset.filterType;
+          let active = false;
+          if (type === "all") {
+            active = !activeModuleId && !activeSuiteId;
+          } else if (type === "module") {
+            active =
+              !!activeModuleId &&
+              !activeSuiteId &&
+              el.dataset.moduleId === activeModuleId;
+          } else if (type === "suite") {
+            active = !!activeSuiteId && el.dataset.suiteId === activeSuiteId;
+          }
+          el.classList.toggle("active", active);
+        });
+      }
+
+      function updateCrumb() {
+        const crumb = document.getElementById("active-filter-crumb");
+        const label = document.getElementById("crumb-label");
+
+        const parts = [];
+        if (activeModuleName) parts.push(activeModuleName);
+        if (activeSuiteName) parts.push(activeSuiteName);
+        if (activeParentKeyword) parts.push(`Groupe: ${activeParentKeyword}`);
+
+        if (parts.length === 0) {
+          crumb.style.display = "none";
+        } else {
+          crumb.style.display = "flex";
+          label.textContent = parts.join(" › ");
+        }
+      }
+
+      function clearSuiteFilter() {
+        activeSuiteId = null;
+        activeSuiteName = null;
+        activeModuleId = null;
+        activeModuleName = null;
+        activeParentKeyword = null;
+        refreshSidebarActiveState();
+        updateCrumb();
+        highlightKeywordGroup();
+        applyFilters();
+      }
+
+      // ===== KEYWORD GROUPS =====
+      function renderKeywordGroups(failures) {
+        const host = document.getElementById("keyword-groups");
+        const counters = {};
+
+        (failures || []).forEach((f) => {
+          const parent =
+            ((f.keyword || "").split(" ➔ ")[0] || "").trim() || "Inconnu";
+          counters[parent] = (counters[parent] || 0) + 1;
+        });
+
+        const groups = Object.entries(counters)
+          .filter(([, count]) => count > 1)
+          .sort((a, b) => b[1] - a[1]);
+
+        if (!groups.length) {
+          host.style.display = "none";
+          host.innerHTML = "";
+          return;
+        }
+
+        host.style.display = "flex";
+        host.innerHTML =
+          groups
+            .map(
+              ([keyword, count]) => `
+        <button class="kw-group-pill" data-parent-keyword="${escHAttr(keyword)}" onclick="filterByKeywordGroup('${escJS(keyword)}')">
+            <span class="kw-group-pill__name">${escH(keyword)}</span>
+            <span class="kw-group-pill__count">${count}</span>
+        </button>
+    `,
+            )
+            .join("") +
+          '<button class="kw-group-clear" type="button" onclick="clearKeywordGroup()"><i class="fa-solid fa-xmark"></i> Réinitialiser groupe</button>';
+
+        highlightKeywordGroup();
+      }
+
+      function filterByKeywordGroup(parentKeyword) {
+        activeParentKeyword = parentKeyword;
+        updateCrumb();
+        highlightKeywordGroup();
+        applyFilters();
+      }
+
+      function clearKeywordGroup() {
+        activeParentKeyword = null;
+        updateCrumb();
+        highlightKeywordGroup();
+        applyFilters();
+      }
+
+      function highlightKeywordGroup() {
+        const selected = (activeParentKeyword || "").toLowerCase();
+        document.querySelectorAll(".kw-group-pill").forEach((el) => {
+          const value = (el.dataset.parentKeyword || "").toLowerCase();
+          el.classList.toggle("active", !!selected && value === selected);
+        });
+      }
+
+      // ===== SORT =====
+      function onSortChange() {
+        sortState.field = document.getElementById("sort-field").value;
+        sortState.dir = document.getElementById("sort-dir").value;
+        applyFilters();
+      }
+
+      function clearSort() {
+        sortState = { field: "", dir: "asc" };
+        document.getElementById("sort-field").value = "";
+        document.getElementById("sort-dir").value = "asc";
+        applyFilters();
+      }
+
+      function getSortedRows() {
+        const rows = [...allRows];
+        if (!sortState.field) return rows;
+
+        const keyMap = {
+          module: "module",
+          case: "case",
+          keyword: "keyword",
+          parentKeyword: "parentKeyword",
+          error: "error",
+        };
+        const key = keyMap[sortState.field];
+        const dir = sortState.dir === "desc" ? -1 : 1;
+
+        if (!key) return rows;
+
+        return rows.sort((a, b) => {
+          const av = (a.dataset[key] || "").toLowerCase();
+          const bv = (b.dataset[key] || "").toLowerCase();
+          return av.localeCompare(bv, "fr", { sensitivity: "base" }) * dir;
+        });
+      }
+
+      // ===== SEARCH & FILTER =====
+      function applyFilters() {
+        const q = document
+          .getElementById("search-input")
+          .value.toLowerCase()
+          .trim();
+        const tbody = document.getElementById("failed-cases-body");
+        const orderedRows = getSortedRows();
+        let visible = 0;
+
+        tbody.innerHTML = "";
+
+        orderedRows.forEach((row) => {
+          let match = true;
+
+          if (activeModuleId) {
+            match = row.dataset.moduleId === activeModuleId;
+          }
+
+          if (match && activeSuiteId) {
+            const suiteIds = JSON.parse(row.dataset.suiteIds || "[]");
+            match = suiteIds.includes(activeSuiteId);
+          }
+
+          if (match && activeParentKeyword) {
+            match =
+              row.dataset.parentKeyword === activeParentKeyword.toLowerCase();
+          }
+
+          if (match && q) {
+            match =
+              row.dataset.case.includes(q) ||
+              row.dataset.keyword.includes(q) ||
+              row.dataset.error.includes(q) ||
+              row.dataset.module.includes(q) ||
+              row.dataset.parentKeyword.includes(q);
+          }
+
+          row.style.display = match ? "" : "none";
+          tbody.appendChild(row);
+          if (match) visible++;
+        });
+
+        document.getElementById("empty-search").style.display =
+          visible === 0 && allRows.length > 0 ? "block" : "none";
+        updateCount(visible);
+      }
+
+      function updateCount(visible) {
+        const total = allRows.length;
+        const shown = visible !== undefined ? visible : total;
+        const el = document.getElementById("results-count");
+        if (total === 0) {
+          el.innerHTML = "";
+          return;
+        }
+        el.innerHTML =
+          shown < total
+            ? `<strong>${shown}</strong> / ${total} résultats`
+            : `<strong>${total}</strong> résultat${total > 1 ? "s" : ""}`;
+      }
+
+      // ===== DETAIL PANEL =====
+      function openDetail(idx) {
+        const item = window._failures[idx];
+        _currentDetailIdx = idx;
+
+        const breadcrumbEl = document.getElementById("dp-breadcrumb");
+        const pathItems = (item.suite_path || []).slice(1);
+        breadcrumbEl.innerHTML = pathItems
+          .map(
+            (s, i) =>
+              `<span class="dp-crumb-item">${escH(s.name)}</span>${i < pathItems.length - 1 ? '<span class="dp-crumb-sep">›</span>' : ""}`,
+          )
+          .join("");
+
+        document.getElementById("dp-title").textContent = item.case_name;
+
+        const metaEl = document.getElementById("dp-meta");
+        let metaParts = [];
+        if (item.module_name)
+          metaParts.push(
+            `<span class="dp-tag">${escH(item.module_name)}</span>`,
+          );
+        if (item.elapsed)
+          metaParts.push(
+            `<i class="fa-regular fa-clock"></i> ${escH(item.elapsed)}`,
+          );
+        if (item.start_time)
+          metaParts.push(`<span>${escH(item.start_time)}</span>`);
+        if (item.tags && item.tags.length) {
+          metaParts.push(
+            item.tags
+              .map((t) => `<span class="dp-tag">${escH(t)}</span>`)
+              .join(""),
+          );
+        }
+        metaEl.innerHTML = metaParts.join('<span class="dp-meta-sep">·</span>');
+
+        const docSection = document.getElementById("dp-doc-section");
+        if (item.documentation) {
+          document.getElementById("dp-doc").textContent = item.documentation;
+          docSection.style.display = "block";
+        } else {
+          docSection.style.display = "none";
+        }
+
+        const tlEl = document.getElementById("dp-timeline");
+        tlEl.innerHTML = "";
+
+        if (!item.timeline || item.timeline.length === 0) {
+          tlEl.innerHTML =
+            '<p style="color:var(--text-muted);font-size:13px;">Aucune donnée (format HTML). Utilisez output.xml.</p>';
+        } else {
+          let hasFailedYet = false;
+
+          item.timeline.forEach((step, i) => {
+            const isFail = step.status === "FAIL";
+            const isSetup = step.type === "setup" || step.type === "SETUP";
+            const isTeardown =
+              step.type === "teardown" || step.type === "TEARDOWN";
+            const isSkippedAfterFail = hasFailedYet && !isTeardown;
+
+            const stepEl = document.createElement("div");
+            stepEl.className =
+              "dp-step" +
+              (isFail ? " dp-step--fail" : " dp-step--pass") +
+              (isSetup ? " dp-step--setup" : "") +
+              (isTeardown ? " dp-step--teardown" : "") +
+              (isSkippedAfterFail ? " dp-step--greyed" : "");
+
+            let icon = isFail
+              ? '<i class="fa-solid fa-circle-xmark dp-step-icon dp-step-icon--fail"></i>'
+              : '<i class="fa-solid fa-circle-check dp-step-icon dp-step-icon--pass"></i>';
+            if (isSetup)
+              icon =
+                '<i class="fa-solid fa-play dp-step-icon dp-step-icon--setup"></i>';
+            if (isTeardown)
+              icon =
+                '<i class="fa-solid fa-stop dp-step-icon dp-step-icon--teardown"></i>';
+            if (isSkippedAfterFail)
+              icon =
+                '<i class="fa-regular fa-circle dp-step-icon" style="color:var(--text-muted)"></i>';
+
+            let typeBadge = "";
+            if (isSetup)
+              typeBadge =
+                '<span class="dp-step-type dp-step-type--setup">SETUP</span>';
+            else if (isTeardown)
+              typeBadge =
+                '<span class="dp-step-type dp-step-type--teardown">TEARDOWN</span>';
+
+            const argsHTML =
+              step.args && step.args.length
+                ? `<span class="dp-step-args">${step.args.map((a) => escH(a)).join('<span class="dp-step-arg-sep">, </span>')}</span>`
+                : "";
+
+            const elapsedHTML =
+              step.elapsed && !isSkippedAfterFail
+                ? `<span class="dp-step-elapsed ${isFail ? "dp-step-elapsed--fail" : ""}">${escH(step.elapsed)}</span>`
+                : isSkippedAfterFail
+                  ? '<span class="dp-step-elapsed">Not Run</span>'
+                  : "";
+
+            const errorHTML =
+              isFail && step.error_msg
+                ? `<div class="dp-step-error"><i class="fa-solid fa-triangle-exclamation"></i> ${escH(step.error_msg)}</div>`
+                : "";
+
+            const isLast = i === item.timeline.length - 1;
+            stepEl.innerHTML = `
+                <div class="dp-step__connector">
+                    ${icon}
+                    ${!isLast ? '<div class="dp-step__line"></div>' : ""}
+                </div>
+                <div class="dp-step__body">
+                    <div class="dp-step__header">
+                        ${typeBadge}
+                        <span class="dp-step-name">${escH(step.name)}</span>
+                        ${argsHTML}
+                        ${elapsedHTML}
+                    </div>
+                    ${errorHTML}
+                </div>`;
+            tlEl.appendChild(stepEl);
+
+            if (isFail) hasFailedYet = true;
+          });
+        }
+
+        document.getElementById("detail-overlay").classList.add("active");
+        document.getElementById("detail-panel").classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDetail() {
+        document.getElementById("detail-overlay").classList.remove("active");
+        document.getElementById("detail-panel").classList.remove("active");
+        document.body.style.overflow = "";
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDetail();
+      });
+
+      // ===== UTILS =====
+      function escH(t) {
+        return String(t || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function escHAttr(t) {
+        return escH(t).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      function escJS(t) {
+        return String(t || "")
+          .replace(/\\/g, "\\\\")
+          .replace(/'/g, "\\'");
+      }
+
+      // فاش كتكون كـ loopي على الـ failures
+failures.forEach(item => {
+    // 1. توليد ID فريد للكاس
+    const caseId = btoa(item.case_name + item.module_id);
+    // 2. واش هاد الكاس ديجا "تقاد"؟
+    const isFixed = JSON.parse(localStorage.getItem('fixed_' + caseId) || 'false');
+    
+    const row = document.createElement('tr');
+    if (isFixed) row.classList.add('row-fixed'); // تطبيق الستيل إلا كان مقاد
+    
+    row.innerHTML = `
+        <td><input type="checkbox" class="fix-checkbox" ${isFixed ? 'checked' : ''} onchange="toggleFix(this, '${caseId}')"></td>
+        <td>${escH(item.case_name)}</td>
+        <td>${escH(item.error_message)}</td>
+        `;
+    tableBody.appendChild(row);
+});
+
+// 3. زيد هاد الفونكسيون فـ اللخر ديال السكريبت باش تحفظ الحالة
+    function toggleFix(checkbox, id) {
+        const row = checkbox.closest('tr');
+        const isChecked = checkbox.checked;
+        
+        // حفظ فـ localStorage
+        localStorage.setItem('fixed_' + id, JSON.stringify(isChecked));
+        
+        // تبديل الستيل
+        if (isChecked) {
+            row.classList.add('row-fixed');
+        } else {
+            row.classList.remove('row-fixed');
+        }
+    }
+    </script>
+  </body>
+</html>
