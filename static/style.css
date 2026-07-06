@@ -1474,6 +1474,24 @@ tbody tr:hover .case-detail-hint {
     width: 100%;
   }
 
+  .results-header h2 {
+    width: 100%;
+  }
+
+  .badge-failed,
+  .badge-success,
+  .summary-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summary-pill {
+    min-height: 44px;
+    font-size: 14px;
+    text-align: center;
+    padding: 10px 14px;
+  }
+
   .header-actions,
   .results-count {
     justify-content: flex-start;
