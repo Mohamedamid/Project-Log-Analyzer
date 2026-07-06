@@ -870,13 +870,22 @@
 
           card.innerHTML = `
             <div class="mobile-case-card__header">
-              <div>
-                <div class="case-module-tag">${moduleLabel}</div>
-                <div class="case-title">${escH(item.case_name)}</div>
+              <div class="mobile-case-card__headline">
+                <div class="mobile-case-card__icon" aria-hidden="true">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="mobile-case-card__headline-text">
+                  <div class="case-module-tag">${moduleLabel}</div>
+                  <div class="case-title">${escH(item.case_name)}</div>
+                </div>
               </div>
               <div class="case-detail-hint">Voir détails</div>
             </div>
-            <div class="case-suite-path">${suitePath || "Suite non disponible"}</div>
+            <div class="mobile-case-card__meta">
+              <span class="mobile-case-card__meta-item"><i class="fa-regular fa-folder-open"></i> ${escH(suitePath || "Suite non disponible")}</span>
+              <span class="mobile-case-card__meta-dot">•</span>
+              <span class="mobile-case-card__meta-item"><i class="fa-solid fa-code-branch"></i> Keyword</span>
+            </div>
             ${mobileKeyword}
             <div class="mobile-case-card__error">
               <span class="mobile-case-card__label">Message</span>
