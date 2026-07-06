@@ -565,6 +565,10 @@ body {
   border-radius: var(--radius);
 }
 
+.mobile-cases-list {
+  display: none;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1351,4 +1355,311 @@ tbody tr:hover .case-detail-hint {
     cursor: pointer;
     width: 18px;
     height: 18px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+  .container {
+    padding: 24px 20px;
+  }
+
+  .results-layout {
+    flex-direction: column;
+  }
+
+  .suite-sidebar {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 16px;
+    position: relative;
+    top: auto;
+    max-height: none;
+  }
+
+  .results-main {
+    width: 100%;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: none;
+  }
+
+  .sort-controls {
+    width: 100%;
+  }
+
+  .results-count {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 12px 10px 28px;
+  }
+
+  .container {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+
+  .dashboard-header,
+  .results-header,
+  .toolbar,
+  .detail-panel__header,
+  .queue-head,
+  .queue-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-header {
+    gap: 14px;
+  }
+
+  .header-left,
+  .header-actions,
+  .sort-controls,
+  .queue-actions {
+    width: 100%;
+  }
+
+  .header-actions,
+  .results-count {
+    justify-content: flex-start;
+  }
+
+  .theme-btn,
+  .export-btn,
+  .queue-btn,
+  .sort-controls select,
+  .search-box input {
+    width: 100%;
+  }
+
+  .search-box {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .sort-controls select,
+  .export-btn,
+  .queue-btn,
+  .theme-btn {
+    justify-content: center;
+  }
+
+  .drop-zone {
+    padding: 28px 14px;
+  }
+
+  .queue-panel {
+    padding: 10px;
+  }
+
+  .queued-file-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .queued-file-main {
+    width: 100%;
+  }
+
+  .queued-file-name {
+    max-width: none;
+  }
+
+  .queued-remove {
+    align-self: flex-end;
+  }
+
+  .keyword-groups {
+    align-items: stretch;
+  }
+
+  .kw-group-pill,
+  .kw-group-clear {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-wrapper {
+    display: none;
+  }
+
+  .mobile-cases-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mobile-case-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobile-case-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mobile-case-card__keywords {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mobile-case-card__error {
+    border: 1px solid var(--error-border);
+    background: var(--error-bg);
+    color: var(--error-text);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .mobile-case-card__label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.75;
+  }
+
+  .mobile-case-card__error p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  th,
+  td {
+    padding: 12px !important;
+  }
+
+  .case-module-tag,
+  .case-detail-hint,
+  .results-count,
+  .loader-container p,
+  .drop-zone__subtext,
+  .drop-zone__prompt,
+  .loader-container p,
+  .empty-state p {
+    font-size: 12px;
+  }
+
+  .detail-panel {
+    width: 100vw;
+  }
+
+  .detail-panel__header,
+  .detail-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .detail-panel__header h2 {
+    font-size: 14px;
+  }
+
+  .detail-close-btn {
+    align-self: flex-end;
+  }
+
+  .dp-meta-row,
+  .dp-breadcrumb {
+    gap: 6px;
+  }
+
+  .dp-step {
+    gap: 8px;
+  }
+
+  .dp-step__connector {
+    width: 16px;
+  }
+
+  .dp-step-name,
+  .dp-step-args,
+  .dp-step-error,
+  .dp-error-pre,
+  .error-cell pre,
+  .kw-parent,
+  .kw-child {
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 19px;
+  }
+
+  .dashboard-header p {
+    font-size: 12px;
+  }
+
+  .drop-icon-wrap {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+
+  .drop-zone__prompt {
+    font-size: 14px;
+  }
+
+  .drop-zone__subtext {
+    font-size: 11px;
+  }
+
+  .suite-sidebar__title,
+  .results-header h2,
+  .detail-label {
+    font-size: 10px;
+  }
+
+  .case-name-cell .case-title {
+    font-size: 12px;
+  }
+
+  .kw-parent,
+  .kw-child,
+  .copy-btn,
+  .export-btn,
+  .queue-btn,
+  .theme-btn {
+    font-size: 12px;
+  }
+
+  .detail-panel {
+    box-shadow: none;
+  }
+
+  .detail-overlay {
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .detail-solution-card,
+  .dp-doc-text,
+  .detail-error-pre,
+  .dp-step-error {
+    font-size: 12px;
+  }
 }

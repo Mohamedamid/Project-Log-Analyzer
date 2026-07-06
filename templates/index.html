@@ -165,6 +165,8 @@
               </table>
             </div>
 
+            <div id="mobile-cases-list" class="mobile-cases-list"></div>
+
             <div
               id="no-failures-state"
               class="empty-state"
@@ -278,6 +280,7 @@
       // ===== STATE =====
       let queuedFiles = [];
       let allRows = [];
+      let allCards = [];
       let activeSuiteId = null;
       let activeSuiteName = null;
       let activeModuleId = null;
@@ -775,13 +778,16 @@
 
         const summaryEl = document.getElementById("summary");
         const tableContainer = document.getElementById("table-container");
+        const mobileCasesList = document.getElementById("mobile-cases-list");
         const toolbarZone = document.getElementById("toolbar-zone");
         const noFailuresState = document.getElementById("no-failures-state");
         const tbody = document.getElementById("failed-cases-body");
         const keywordGroupsEl = document.getElementById("keyword-groups");
 
         tbody.innerHTML = "";
+        mobileCasesList.innerHTML = "";
         allRows = [];
+        allCards = [];
         window._failures = data.failures || [];
 
         buildModuleTree(data.modules || [], data.failures || []);
@@ -802,6 +808,7 @@
         summaryEl.className = "badge-failed";
         summaryEl.innerHTML = `<span>${data.failed_count} Échecs Détectés · ${moduleCount} module${moduleCount > 1 ? "s" : ""}</span>`;
         tableContainer.style.display = "block";
+        mobileCasesList.style.display = "";
         toolbarZone.style.display = "flex";
         noFailuresState.style.display = "none";
 
@@ -844,7 +851,45 @@
 
           row.addEventListener("click", () => openDetail(idx));
           allRows.push(row);
+
+          const card = document.createElement("article");
+          card.className = "mobile-case-card";
+          card.dataset.case = row.dataset.case;
+          card.dataset.keyword = row.dataset.keyword;
+          card.dataset.error = row.dataset.error;
+          card.dataset.module = row.dataset.module;
+          card.dataset.moduleId = row.dataset.moduleId;
+          card.dataset.parentKeyword = row.dataset.parentKeyword;
+          card.dataset.suiteIds = row.dataset.suiteIds;
+          card.style.cursor = "pointer";
+
+          const mobileKeyword =
+            kws.length > 1
+              ? `<div class="mobile-case-card__keywords"><span class="kw-parent">${escH(kws[0])}</span><span class="kw-arrow"><i class="fa-solid fa-arrow-down fa-xs"></i></span><span class="kw-child">${escH(kws[kws.length - 1])}</span></div>`
+              : `<div class="mobile-case-card__keywords"><span class="kw-child">${escH(item.keyword)}</span></div>`;
+
+          card.innerHTML = `
+            <div class="mobile-case-card__header">
+              <div>
+                <div class="case-module-tag">${moduleLabel}</div>
+                <div class="case-title">${escH(item.case_name)}</div>
+              </div>
+              <div class="case-detail-hint">Voir détails</div>
+            </div>
+            <div class="case-suite-path">${suitePath || "Suite non disponible"}</div>
+            ${mobileKeyword}
+            <div class="mobile-case-card__error">
+              <span class="mobile-case-card__label">Message</span>
+              <p>${escH(item.error_message)}</p>
+            </div>`;
+
+          card.addEventListener("click", () => openDetail(idx));
+          allCards.push(card);
+          row.__cardRef = card;
+          card.__rowRef = row;
         });
+
+        mobileCasesList.replaceChildren(...allCards);
 
         applyFilters();
       }
@@ -1152,6 +1197,7 @@
           .value.toLowerCase()
           .trim();
         const tbody = document.getElementById("failed-cases-body");
+        const mobileCasesList = document.getElementById("mobile-cases-list");
         const orderedRows = getSortedRows();
         let visible = 0;
 
@@ -1186,6 +1232,11 @@
           row.style.display = match ? "" : "none";
           tbody.appendChild(row);
           if (match) visible++;
+
+          const card = row.__cardRef;
+          if (card) {
+            card.style.display = match ? "" : "none";
+          }
         });
 
         document.getElementById("empty-search").style.display =
