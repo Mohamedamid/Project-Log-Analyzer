@@ -1,0 +1,25 @@
+<nav class="app-sidebar" id="app-sidebar" aria-label="Navigation principale">
+  <div class="app-sidebar__brand">
+    <img class="app-sidebar__logo-img" src="../static/cegedim-logo.png" alt="Cegedim" />
+    <span>QA Center</span>
+  </div>
+  <button class="app-sidebar__toggle" type="button" onclick="toggleAppSidebar()" title="Afficher / reduire le menu">
+    <i class="fa-solid fa-angles-left"></i>
+  </button>
+  <button class="app-nav-btn active" type="button" data-page-target="dashboard" onclick="showPage('dashboard')">
+    <i class="fa-solid fa-gauge-high"></i>
+    <span>Dashboard</span>
+  </button>
+  <button class="app-nav-btn" type="button" data-page-target="analyse" onclick="showPage('analyse')">
+    <i class="fa-solid fa-magnifying-glass-chart"></i>
+    <span>Analyse</span>
+  </button>
+  <button class="app-nav-btn" type="button" data-page-target="history" onclick="showPage('history')">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <span>Historique</span>
+  </button>
+  <button class="app-nav-btn" type="button" data-page-target="gitlab" onclick="showPage('gitlab')">
+    <i class="fa-brands fa-gitlab"></i>
+    <span>GitLab</span>
+  </button>
+</nav>

@@ -1,0 +1,139 @@
+<!-- RESULTS: sidebar + table -->
+<div id="results" style="display: none">
+  <div class="results-header">
+    <h2>Résultats de l'analyse</h2>
+    <div class="results-header__right">
+      <button
+        id="sidebar-toggle"
+        class="export-btn sidebar-toggle"
+        type="button"
+        onclick="toggleSidebar()"
+        title="Modules"
+        aria-label="Modules"
+      >
+        <i class="fa-solid fa-bars-staggered"></i>
+      </button>
+      <div id="summary" class="badge-failed"></div>
+    </div>
+  </div>
+  <div id="status-dashboard" class="status-dashboard"></div>
+
+  <div class="results-layout">
+    <!-- SIDEBAR suite tree -->
+    <aside class="suite-sidebar" id="suite-sidebar">
+      <div class="suite-sidebar__title">
+        <i class="fa-solid fa-cubes"></i> Modules
+      </div>
+      <div id="suite-tree"></div>
+    </aside>
+
+    <!-- MAIN: toolbar + table -->
+    <div class="results-main">
+      <div class="toolbar" id="toolbar-zone">
+        <button
+          id="sidebar-toggle-toolbar"
+          class="export-btn sidebar-toggle"
+          type="button"
+          onclick="toggleSidebar()"
+          title="Modules"
+          aria-label="Modules"
+        >
+          <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <div class="search-box">
+          <span class="search-icon"
+            ><i class="fa-solid fa-magnifying-glass"></i
+          ></span>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Rechercher un cas, keyword, erreur..."
+            oninput="applyFilters()"
+          />
+        </div>
+        <div class="sort-controls">
+          <select id="status-filter" onchange="applyFilters()">
+            <option value="all">Tous les tests</option>
+            <option value="open">A corriger</option>
+            <option value="blocked">Bloques</option>
+            <option value="fixed">Corriges</option>
+            <option value="fail">Echecs</option>
+            <option value="pass">Succes</option>
+            <option value="other">Skip / Bloque</option>
+          </select>
+          <select id="sort-field" onchange="onSortChange()">
+            <option value="">Tri: Aucun</option>
+            <option value="module">Module</option>
+            <option value="case">Cas de test</option>
+            <option value="keyword">Keyword</option>
+            <option value="parentKeyword">Keyword parent</option>
+            <option value="error">Erreur</option>
+          </select>
+          <select id="sort-dir" onchange="onSortChange()">
+            <option value="asc">A → Z</option>
+            <option value="desc">Z → A</option>
+          </select>
+          <button class="export-btn" type="button" onclick="clearSort()">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Annuler tri
+          </button>
+        </div>
+        <!-- breadcrumb actif -->
+        <div
+          id="active-filter-crumb"
+          class="active-crumb"
+          style="display: none"
+        >
+          <span id="crumb-label"></span>
+          <button
+            onclick="clearSuiteFilter()"
+            title="Réinitialiser le filtre"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <span class="results-count" id="results-count"></span>
+      </div>
+
+      <div
+        id="keyword-groups"
+        class="keyword-groups"
+        style="display: none"
+      ></div>
+
+      <div class="table-wrapper" id="table-container">
+        <table id="failed-cases-table">
+          <thead>
+            <tr>
+              <th style="width: 11%">Statut</th>
+              <th style="width: 20%">Cas de Test</th>
+              <th style="width: 25%">Keyword</th>
+              <th style="width: 34%">Message</th>
+              <th style="width: 10%">Action</th>
+            </tr>
+          </thead>
+          <tbody id="failed-cases-body"></tbody>
+        </table>
+      </div>
+
+      <div id="mobile-cases-list" class="mobile-cases-list"></div>
+
+      <div
+        id="no-failures-state"
+        class="empty-state"
+        style="display: none; text-align: center; padding: 40px"
+      >
+        <div style="font-size: 40px; margin-bottom: 10px">🎉</div>
+        <h3 style="color: #2ecc71; margin-bottom: 5px">
+          Excellent ! Aucun échec détecté
+        </h3>
+        <p style="color: #7f8c8d; margin: 0">
+          Tous vos cas de test sont passés avec succès.
+        </p>
+      </div>
+
+      <div id="empty-search" class="empty-state" style="display: none">
+        <p>Aucun résultat pour cette recherche.</p>
+      </div>
+    </div>
+  </div>
+</div>

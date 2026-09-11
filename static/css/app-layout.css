@@ -1,0 +1,685 @@
+/* Final layout and page/component polish. Loaded after legacy styles. */
+/* Final requested cleanup */
+body {
+  padding-left: var(--sidebar-open) !important;
+}
+
+body.app-sidebar-collapsed {
+  padding-left: var(--sidebar-closed) !important;
+}
+
+.dashboard-header {
+  left: var(--sidebar-open) !important;
+}
+
+.app-sidebar-collapsed .dashboard-header {
+  left: var(--sidebar-closed) !important;
+}
+
+.app-sidebar__brand {
+  justify-content: center !important;
+}
+
+.qa-panels {
+  display: none !important;
+}
+
+.qa-score-ring,
+.qa-panel--chart,
+.pie-viz,
+.donut-viz {
+  display: none !important;
+}
+
+.qa-hero {
+  grid-template-columns: 1fr !important;
+}
+
+.dp-step--skipped {
+  opacity: 0.72;
+}
+
+.dp-step--skipped .dp-step-name,
+.dp-step--skipped .dp-step-args {
+  color: var(--text-muted) !important;
+}
+
+.dp-step-icon--skipped {
+  color: var(--cegedim-gray, #8d9297) !important;
+}
+
+.dp-step--skipped .dp-step__line {
+  background: var(--border) !important;
+}
+
+.dp-step-elapsed--skipped {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text-muted) !important;
+}
+
+.qa-kpi-grid {
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+
+.qa-kpi {
+  background:
+    linear-gradient(180deg, rgba(47, 159, 227, 0.05), transparent),
+    var(--surface);
+}
+
+body[data-page="analyse"] #drop-zone.drop-zone,
+body[data-page="analyse"].has-analysis #drop-zone.drop-zone {
+  max-width: none !important;
+  min-height: 136px !important;
+  margin: 18px 0 16px !important;
+  padding: 16px !important;
+  grid-template-columns: 48px minmax(260px, 0.75fr) minmax(420px, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
+}
+
+body[data-page="analyse"] #drop-zone .source-actions,
+body[data-page="analyse"].has-analysis #drop-zone .source-actions {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+}
+
+body[data-page="analyse"] #drop-zone .queue-panel,
+body[data-page="analyse"].has-analysis #drop-zone .queue-panel {
+  grid-column: 3 !important;
+  grid-row: 2 / 4 !important;
+  width: 100% !important;
+  min-height: 72px !important;
+  background: color-mix(in srgb, var(--surface2) 70%, var(--cegedim-blue) 5%) !important;
+  border: 1px solid var(--border) !important;
+}
+
+body[data-page="analyse"] #drop-zone .queued-files-list,
+body[data-page="analyse"].has-analysis #drop-zone .queued-files-list {
+  display: grid !important;
+  grid-column: 1 / -1 !important;
+  gap: 6px;
+  max-height: 96px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.queued-file-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.queued-file-main {
+  display: grid;
+  grid-template-columns: 18px minmax(110px, 0.8fr) minmax(150px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.queued-file-name,
+.queued-file-folder {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queued-file-name {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.queued-file-folder,
+.queued-file-size {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.queued-remove {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.queued-remove:hover {
+  color: #fff;
+  border-color: #ef4444;
+  background: #ef4444;
+}
+
+@media (max-width: 1280px) {
+  body,
+  body.app-sidebar-collapsed {
+    padding-left: var(--sidebar-closed) !important;
+  }
+
+  .dashboard-header,
+  .app-sidebar-collapsed .dashboard-header {
+    left: var(--sidebar-closed) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  body[data-page="analyse"] #drop-zone.drop-zone,
+  body[data-page="analyse"].has-analysis #drop-zone.drop-zone {
+    grid-template-columns: 48px 1fr !important;
+  }
+
+  body[data-page="analyse"] #drop-zone .source-actions,
+  body[data-page="analyse"].has-analysis #drop-zone .source-actions,
+  body[data-page="analyse"] #drop-zone .queue-panel,
+  body[data-page="analyse"].has-analysis #drop-zone .queue-panel {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .queued-file-main {
+    grid-template-columns: 18px minmax(100px, 1fr) auto;
+  }
+
+  .queued-file-folder {
+    grid-column: 2 / -1;
+  }
+}
+
+/* Empty pages polish */
+body {
+  padding-top: var(--topbar-height) !important;
+  padding-right: 0 !important;
+  padding-bottom: 40px !important;
+}
+
+.container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 22px 28px 42px !important;
+}
+
+.app-page {
+  width: 100% !important;
+  max-width: none !important;
+  padding-top: 0 !important;
+}
+
+.page-title-row {
+  width: 100% !important;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+}
+
+.project-dashboard,
+.history-list,
+.gitlab-grid {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.dashboard-empty {
+  width: 100% !important;
+  min-height: min(460px, calc(100vh - var(--topbar-height) - 150px)) !important;
+  margin: 0 !important;
+  padding: 42px 28px !important;
+  border-radius: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--cegedim-blue) 24%, var(--border)) !important;
+  background:
+    linear-gradient(135deg, rgba(47, 159, 227, 0.08), rgba(105, 184, 66, 0.06)),
+    var(--surface) !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 12px !important;
+}
+
+.dashboard-empty i {
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #fff !important;
+  background: var(--brand-gradient) !important;
+  font-size: 28px !important;
+  margin: 0 0 4px !important;
+}
+
+.dashboard-empty h3 {
+  margin: 0 !important;
+  color: var(--text) !important;
+  font-size: 22px !important;
+}
+
+.dashboard-empty p {
+  max-width: 620px !important;
+  margin: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.dashboard-empty .export-btn {
+  margin-top: 8px !important;
+}
+
+#history-list.history-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.history-card {
+  min-width: 0 !important;
+}
+
+#gitlab-page .gitlab-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
+  align-items: stretch !important;
+}
+
+#gitlab-page .integration-panel,
+#gitlab-page .gitlab-code {
+  grid-column: 1 / -1 !important;
+}
+
+@media (max-width: 1280px) {
+  body,
+  body.app-sidebar-collapsed {
+    padding-left: var(--sidebar-closed) !important;
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-closed) !important;
+    align-items: center !important;
+  }
+
+  .dashboard-header,
+  .app-sidebar-collapsed .dashboard-header {
+    left: var(--sidebar-closed) !important;
+  }
+
+  .app-sidebar__brand,
+  .app-sidebar-collapsed .app-sidebar__brand {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .app-sidebar__brand span:last-child,
+  .app-nav-btn span {
+    display: none !important;
+  }
+
+  .app-nav-btn,
+  .app-sidebar__toggle {
+    width: 52px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-header {
+    padding: 0 14px !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+  }
+
+  .header-chip {
+    display: none !important;
+  }
+
+  .container {
+    padding: 18px 14px 28px !important;
+  }
+
+  .page-title-row {
+    align-items: flex-start !important;
+  }
+
+  #gitlab-page .gitlab-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final shell spacing: header/sidebar stay flush, content gets breathing room. */
+:root {
+  --content-x-gap: 40px;
+  --content-top-gap: 34px;
+  --content-bottom-gap: 52px;
+}
+
+body {
+  padding-top: var(--topbar-height) !important;
+  padding-left: var(--sidebar-open) !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body.app-sidebar-collapsed {
+  padding-left: var(--sidebar-closed) !important;
+}
+
+.dashboard-header {
+  left: var(--sidebar-open) !important;
+}
+
+.app-sidebar-collapsed .dashboard-header {
+  left: var(--sidebar-closed) !important;
+}
+
+.container {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: var(--content-top-gap) var(--content-x-gap) var(--content-bottom-gap) !important;
+}
+
+.container > .app-page,
+.container > #drop-zone,
+.container > #loader,
+.container > #results {
+  max-width: none !important;
+}
+
+.app-page {
+  padding: 0 !important;
+}
+
+.page-title-row {
+  margin: 0 0 22px !important;
+}
+
+.project-dashboard,
+.history-list,
+.gitlab-grid {
+  gap: 18px !important;
+}
+
+.dashboard-empty {
+  width: 100% !important;
+  min-height: min(430px, calc(100vh - var(--topbar-height) - 180px)) !important;
+  margin: 0 0 18px !important;
+  padding: 46px 34px !important;
+}
+
+#dashboard-page .project-dashboard,
+#history-page .history-list,
+#gitlab-page .gitlab-grid {
+  padding-bottom: 18px !important;
+}
+
+@media (max-width: 1280px) {
+  body,
+  body.app-sidebar-collapsed {
+    padding-left: var(--sidebar-closed) !important;
+  }
+
+  .dashboard-header,
+  .app-sidebar-collapsed .dashboard-header {
+    left: var(--sidebar-closed) !important;
+  }
+
+  .container {
+    padding: 32px 32px 46px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --content-x-gap: 18px;
+    --content-top-gap: 24px;
+    --content-bottom-gap: 34px;
+  }
+
+  .container {
+    padding: var(--content-top-gap) var(--content-x-gap) var(--content-bottom-gap) !important;
+  }
+
+  .page-title-row {
+    margin-bottom: 18px !important;
+  }
+
+  .dashboard-empty {
+    min-height: 360px !important;
+    padding: 34px 18px !important;
+  }
+}
+
+/* Visible shell gap: move the page surfaces away from header/sidebar. */
+:root {
+  --content-x-gap: 42px;
+  --content-top-gap: 34px;
+  --content-bottom-gap: 42px;
+}
+
+.container {
+  padding: 0 !important;
+}
+
+.container > .app-page,
+.container > #results,
+.container > #loader {
+  box-sizing: border-box !important;
+  width: calc(100% - (var(--content-x-gap) * 2)) !important;
+  margin: var(--content-top-gap) var(--content-x-gap) var(--content-bottom-gap) !important;
+}
+
+body[data-page="analyse"] #drop-zone.drop-zone,
+body[data-page="analyse"].has-analysis #drop-zone.drop-zone {
+  box-sizing: border-box !important;
+  width: calc(100% - (var(--content-x-gap) * 2)) !important;
+  max-width: none !important;
+  margin: var(--content-top-gap) var(--content-x-gap) 22px !important;
+}
+
+body[data-page="analyse"].has-analysis #results {
+  margin-top: 0 !important;
+}
+
+.dashboard-empty {
+  min-height: min(520px, calc(100vh - var(--topbar-height) - 150px)) !important;
+  margin: 0 !important;
+}
+
+body:not(.has-analysis) #dashboard-page .page-title-row {
+  justify-content: center !important;
+  text-align: center !important;
+  margin-bottom: 18px !important;
+}
+
+body:not(.has-analysis) #dashboard-page .page-title-row .export-btn {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  :root {
+    --content-x-gap: 34px;
+    --content-top-gap: 30px;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --content-x-gap: 18px;
+    --content-top-gap: 22px;
+    --content-bottom-gap: 30px;
+  }
+
+  .container > .app-page,
+  .container > #results,
+  .container > #loader,
+  body[data-page="analyse"] #drop-zone.drop-zone,
+  body[data-page="analyse"].has-analysis #drop-zone.drop-zone {
+    width: calc(100% - (var(--content-x-gap) * 2)) !important;
+    margin-left: var(--content-x-gap) !important;
+    margin-right: var(--content-x-gap) !important;
+  }
+}
+
+/* Squash-like dashboard statistics */
+.qa-score-ring {
+  display: none !important;
+}
+
+.qa-hero {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  min-height: auto !important;
+  padding: 20px 22px !important;
+}
+
+.qa-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(140px, 1fr)) !important;
+  gap: 14px !important;
+  margin: 16px 0 !important;
+}
+
+.qa-panels {
+  display: grid !important;
+  grid-template-columns: 1.05fr 1fr 1fr !important;
+  gap: 14px !important;
+  margin: 0 0 16px !important;
+}
+
+.qa-panel,
+.qa-panel--chart {
+  display: block !important;
+  min-height: 230px !important;
+  padding: 18px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06) !important;
+}
+
+.qa-chart-layout {
+  display: grid !important;
+  grid-template-columns: 150px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 22px !important;
+}
+
+.qa-pie {
+  width: 150px !important;
+  aspect-ratio: 1 !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
+}
+
+.qa-pie::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 38px !important;
+  border-radius: 50% !important;
+  background: var(--surface) !important;
+}
+
+.qa-pie span,
+.qa-pie small {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.chart-legend,
+.qa-status-list,
+.qa-risk-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.chart-legend span,
+.qa-status-row,
+.qa-risk-item {
+  min-height: 34px !important;
+  border-radius: 7px !important;
+  background: color-mix(in srgb, var(--surface2) 82%, var(--cegedim-blue) 4%) !important;
+}
+
+@media (max-width: 1180px) {
+  .qa-kpi-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  }
+
+  .qa-panels {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .qa-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qa-hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qa-chart-layout {
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+  }
+}
+
+/* Final container fix */
+.container {
+  box-sizing: border-box !important;
+  width: calc(100% - 40px) !important;
+  max-width: none !important;
+  margin: 20px !important;
+  padding: 0 !important;
+}
+
+.container > .app-page,
+.container > #results,
+.container > #loader {
+  width: 100% !important;
+  margin: 0 0 24px !important;
+}
+
+body[data-page="analyse"] #drop-zone.drop-zone,
+body[data-page="analyse"].has-analysis #drop-zone.drop-zone {
+  width: 100% !important;
+  margin: 0 0 24px !important;
+}
+
+.project-dashboard,
+.history-list,
+.gitlab-grid {
+  width: 100% !important;
+}
+
+.qa-hero,
+.qa-kpi-grid,
+.qa-panels,
+.dashboard-table-card,
+.dashboard-empty {
+  max-width: 100% !important;
+}
+
+@media (max-width: 760px) {
+  .container {
+    width: calc(100% - 24px) !important;
+    margin: 12px !important;
+  }
+}

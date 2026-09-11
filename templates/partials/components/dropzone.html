@@ -1,0 +1,72 @@
+<!-- DROP ZONE -->
+<div id="drop-zone" class="drop-zone">
+  <div class="drop-icon-wrap">📂</div>
+  <span class="drop-zone__prompt"
+    >Glissez vos rapports de test ici (multi-fichiers)</span
+  >
+  <span class="drop-zone__subtext"
+    >ou cliquez pour sélectionner plusieurs fichiers</span
+  >
+  <div class="file-types">
+    <span class="file-badge">output.xml</span>
+    <span class="file-badge">dossier complet</span>
+    <span class="file-badge">scan recursif .xml</span>
+  </div>
+  <input
+    type="file"
+    name="files"
+    id="file-input"
+    class="drop-zone__input"
+    accept=".html,.xml,.png,.jpg,.jpeg,.gif,.webp"
+    multiple
+  />
+  <input
+    type="file"
+    id="folder-input"
+    class="drop-zone__input"
+    accept=".xml,.png,.jpg,.jpeg,.gif,.webp"
+    multiple
+    webkitdirectory
+    directory
+  />
+
+  <div class="source-actions">
+    <button
+      class="source-btn"
+      type="button"
+      onclick="event.stopPropagation(); openFilePicker()"
+    >
+      <i class="fa-regular fa-file-lines"></i> Choisir fichiers
+    </button>
+    <button
+      class="source-btn"
+      type="button"
+      onclick="event.stopPropagation(); openFolderPicker()"
+    >
+      <i class="fa-regular fa-folder-open"></i> Choisir dossier
+    </button>
+  </div>
+
+  <div class="queue-panel" id="queue-panel">
+    <div class="queue-head">
+      <strong id="queue-count">0 fichier ajouté</strong>
+    </div>
+    <div class="queue-actions">
+      <button
+        class="queue-btn queue-btn--ghost"
+        type="button"
+        onclick="clearQueuedFiles()"
+      >
+        <i class="fa-solid fa-trash"></i> Vider
+      </button>
+      <button
+        class="queue-btn queue-btn--primary"
+        type="button"
+        onclick="analyzeQueuedFiles()"
+      >
+        <i class="fa-solid fa-play"></i> Analyzer maintenant
+      </button>
+    </div>
+    <div id="queued-files-list" class="queued-files-list"></div>
+  </div>
+</div>
