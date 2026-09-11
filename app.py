@@ -303,5 +303,150 @@ def analyze():
     })
 
 
+def analyze_with_all_cases():
+    uploaded_files = request.files.getlist("files")
+    if not uploaded_files and "file" in request.files:
+        uploaded_files = [request.files["file"]]
+
+    uploaded_files = [f for f in uploaded_files if f and f.filename]
+    if not uploaded_files:
+        return jsonify({"error": "Aucun fichier fourni"}), 400
+
+    cases = []
+    failures = []
+    modules = []
+
+    for file_index, file in enumerate(uploaded_files, start=1):
+        filename = file.filename or f"module_{file_index}"
+        ext = os.path.splitext(filename)[1].lower()
+        module_id = f"m{file_index}"
+        module_name = guess_module_name_from_filename(filename, file_index)
+        module_failed_count = 0
+        module_success_count = 0
+        module_suite_tree = {}
+        module_test_count = 0
+
+        if ext == ".xml":
+            try:
+                tree = ET.parse(file)
+                root = tree.getroot()
+                top_suite = root.find("suite")
+                top_suite_name = (top_suite.get("name", "") if top_suite is not None else "").strip()
+                if top_suite_name:
+                    module_name = top_suite_name
+
+                module_suite_tree = extract_suite_tree(root)
+                if module_suite_tree:
+                    module_test_count = module_suite_tree.get("test_count", 0)
+                    prefix_suite_tree_ids(module_suite_tree, module_id)
+
+                suite_id_map = {}
+                for suite in root.findall(".//suite"):
+                    raw_id = suite.get("id", "")
+                    prefixed_id = f"{module_id}:{raw_id}" if raw_id else f"{module_id}:root"
+                    suite_id_map[prefixed_id] = suite.get("name", "")
+
+                for test in root.findall(".//test"):
+                    status_node = test.find("status")
+                    if status_node is None:
+                        continue
+
+                    status = (status_node.get("status") or "").upper()
+                    if not status:
+                        continue
+
+                    is_fail = status == "FAIL"
+                    case_name = test.get("name", "Cas inconnu")
+                    error_message = (status_node.text or "").strip()
+                    if is_fail and not error_message:
+                        msg_node = test.find(".//msg[@status='FAIL']")
+                        error_message = (
+                            msg_node.text.strip()
+                            if msg_node is not None and msg_node.text
+                            else "Echec sans message d'erreur precis dans le XML."
+                        )
+                    if not is_fail:
+                        error_message = ""
+
+                    path_list = find_failed_keyword_path(test) if is_fail else []
+                    keyword = " ➔ ".join(path_list) if path_list else ("Keyword inconnu" if is_fail else "Test reussi")
+                    suite_path_ids = [f"{module_id}:{sid}" for sid in get_suite_path_ids(test)]
+                    suite_path = [{"id": sid, "name": suite_id_map.get(sid, sid)} for sid in suite_path_ids]
+                    doc_node = test.find("doc")
+
+                    case_item = {
+                        "module_id": module_id,
+                        "module_name": module_name,
+                        "source_file": filename,
+                        "status": status,
+                        "case_name": case_name,
+                        "keyword": keyword,
+                        "error_message": error_message,
+                        "timeline": extract_timeline(test),
+                        "start_time": status_node.get("starttime", ""),
+                        "elapsed": parse_elapsed(status_node),
+                        "tags": [t.text for t in test.findall(".//tag") if t.text],
+                        "documentation": doc_node.text.strip() if doc_node is not None and doc_node.text else "",
+                        "suite_path": suite_path,
+                        "suite_ids": suite_path_ids,
+                    }
+                    cases.append(case_item)
+                    if is_fail:
+                        failures.append(case_item)
+                        module_failed_count += 1
+                    elif status == "PASS":
+                        module_success_count += 1
+            except Exception as e:
+                return jsonify({"error": f"Erreur de lecture XML ({filename}) : {str(e)}"}), 500
+        elif ext == ".html":
+            content = file.read().decode("utf-8", errors="ignore")
+            matches = re.findall(
+                r'["\']name["\']:["\'](.*?)["\'].*?["\']status["\']:["\']FAIL["\'].*?["\']message["\']:["\'](.*?)["\']',
+                content,
+            )
+            for match in matches:
+                case_item = {
+                    "module_id": module_id,
+                    "module_name": module_name,
+                    "source_file": filename,
+                    "status": "FAIL",
+                    "case_name": match[0],
+                    "keyword": "Analyse via XML recommandee pour voir l'arborescence",
+                    "error_message": match[1],
+                    "timeline": [],
+                    "start_time": "",
+                    "elapsed": "",
+                    "tags": [],
+                    "documentation": "",
+                    "suite_path": [],
+                    "suite_ids": [],
+                }
+                failures.append(case_item)
+                cases.append(case_item)
+                module_failed_count += 1
+
+        modules.append({
+            "id": module_id,
+            "name": module_name,
+            "source_file": filename,
+            "failed_count": module_failed_count,
+            "success_count": module_success_count,
+            "test_count": module_test_count or len([c for c in cases if c["module_id"] == module_id]),
+            "suite_tree": module_suite_tree,
+        })
+
+    return jsonify({
+        "failed_count": len(failures),
+        "success_count": len([case for case in cases if case.get("status") == "PASS"]),
+        "total_count": len(cases),
+        "cases": cases,
+        "failures": failures,
+        "modules": modules,
+    })
+
+
+app.view_functions["analyze"] = analyze_with_all_cases
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
