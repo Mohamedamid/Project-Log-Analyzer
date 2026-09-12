@@ -14,7 +14,9 @@ function displayResults(data) {
   activeModuleName = null;
   activeParentKeyword = null;
   sortState = { field: "", dir: "asc" };
-  sidebarVisible = window.matchMedia("(min-width: 769px)").matches;
+  sidebarVisible = false;
+  keywordGroupsVisible = false;
+  document.body.classList.remove("keywords-open");
 
   const tbody = document.getElementById("failed-cases-body");
   const mobileCasesList = document.getElementById("mobile-cases-list");
@@ -28,7 +30,7 @@ function displayResults(data) {
   buildModuleTree(data.modules || [], window._failures);
   renderKeywordGroups(window._failures);
   renderSummary(data);
-  document.getElementById("toolbar-zone").style.display = "grid";
+  document.getElementById("toolbar-zone").style.display = "flex";
   document.getElementById("no-failures-state").style.display =
     window._cases.length ? "none" : "block";
 
@@ -122,6 +124,7 @@ function displayResults(data) {
 
   mobileCasesList.replaceChildren(...allCards);
   syncSidebar();
+  toggleAnalysisFocus(true);
   applyFilters();
   updateResponsiveView();
 }

@@ -127,6 +127,8 @@ function renderKeywordGroups(failures) {
     return;
   }
 
+  keywordGroupsVisible = Boolean(activeParentKeyword);
+  toggleKeywordGroups(keywordGroupsVisible);
   host.style.display = "flex";
   host.innerHTML =
     groups

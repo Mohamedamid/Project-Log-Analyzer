@@ -6,6 +6,8 @@ let blockedCaseKeys = new Set(
   JSON.parse(localStorage.getItem("logAnalyzerBlockedCases") || "[]"),
 );
 let sidebarVisible = window.matchMedia("(min-width: 769px)").matches;
+let analysisTableFocus = true;
+let keywordGroupsVisible = false;
 const historyStorageKey = "logAnalyzerHistory";
 const appSidebarStorageKey = "logAnalyzerAppSidebarCollapsed";
 

@@ -31,6 +31,16 @@
     <div class="results-main">
       <div class="toolbar" id="toolbar-zone">
         <button
+          id="table-focus-toggle"
+          class="export-btn table-focus-toggle active"
+          type="button"
+          onclick="toggleAnalysisFocus()"
+          title="Afficher les options"
+          aria-label="Afficher les options"
+        >
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Vue complete
+        </button>
+        <button
           id="sidebar-toggle-toolbar"
           class="export-btn sidebar-toggle"
           type="button"
@@ -39,6 +49,16 @@
           aria-label="Modules"
         >
           <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <button
+          id="keyword-toggle"
+          class="export-btn keyword-toggle"
+          type="button"
+          onclick="toggleKeywordGroups()"
+          title="Afficher les keywords"
+          aria-label="Afficher les keywords"
+        >
+          <i class="fa-solid fa-tags"></i> Keywords
         </button>
         <div class="search-box">
           <span class="search-icon"
