@@ -1268,3 +1268,301 @@ body[data-page="analyse"].has-analysis.analysis-table-focus .table-wrapper {
     text-align: left !important;
   }
 }
+
+/* Stable page views: keep scrolling inside the useful panels */
+html:has(body[data-page="analyse"].has-analysis),
+html:has(body[data-page="history"]) {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis,
+body[data-page="history"] {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .container,
+body[data-page="history"] .container {
+  height: calc(100vh - var(--topbar-height) - 28px) !important;
+  min-height: 0 !important;
+  margin: 14px !important;
+  width: calc(100% - 28px) !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #results {
+  height: calc(100% - 76px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .results-layout {
+  height: calc(100% - 72px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .suite-sidebar,
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .results-main {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .results-main {
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto !important;
+  gap: 8px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .table-wrapper {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: auto !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .mobile-cases-list {
+  max-height: 100% !important;
+  overflow: auto !important;
+}
+
+/* Compact import strip after an analysis is loaded */
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone.drop-zone {
+  min-height: 58px !important;
+  height: auto !important;
+  padding: 8px 10px !important;
+  margin: 0 0 8px !important;
+  grid-template-columns: 36px minmax(220px, 1fr) auto auto !important;
+  grid-template-rows: auto !important;
+  align-items: center !important;
+  gap: 10px 12px !important;
+  border-style: solid !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .drop-icon-wrap {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 16px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .drop-zone__prompt {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .drop-zone__subtext,
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .file-types {
+  display: none !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .source-actions {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  justify-self: end !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-panel {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  min-width: 410px !important;
+  min-height: 42px !important;
+  padding: 6px 8px !important;
+  display: grid !important;
+  grid-template-columns: minmax(120px, 1fr) auto !important;
+  align-items: center !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-head {
+  min-width: 0 !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-btn,
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .source-btn {
+  height: 34px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queued-files-list {
+  display: none !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .results-header {
+  min-height: 56px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 8px !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .toolbar {
+  margin-bottom: 0 !important;
+}
+
+body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #keyword-groups {
+  margin: 0 !important;
+  max-height: 86px !important;
+  overflow: auto !important;
+}
+
+/* History: the page stays fixed, only the saved analyses area scrolls */
+body[data-page="history"] #history-page {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body[data-page="history"] #history-page .page-title-row {
+  flex: 0 0 auto !important;
+}
+
+body[data-page="history"] #history-list.history-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  align-content: start !important;
+  padding: 0 6px 8px 0 !important;
+  grid-auto-rows: minmax(124px, auto) !important;
+}
+
+/* Dashboard: tighter, readable statistics panels */
+#dashboard-page .qa-hero {
+  min-height: 118px !important;
+  padding: 18px 20px !important;
+  margin-bottom: 14px !important;
+}
+
+#dashboard-page .qa-kpi-grid {
+  grid-template-columns: repeat(5, minmax(150px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 12px 0 14px !important;
+}
+
+#dashboard-page .qa-kpi {
+  min-height: 112px !important;
+  padding: 18px 20px !important;
+}
+
+#dashboard-page .qa-panels {
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr) minmax(360px, 0.95fr) !important;
+  gap: 16px !important;
+}
+
+#dashboard-page .qa-panel,
+#dashboard-page .qa-panel--chart {
+  min-height: 0 !important;
+  padding: 20px !important;
+}
+
+#dashboard-page .qa-chart-layout {
+  grid-template-columns: minmax(170px, 210px) minmax(260px, 1fr) !important;
+  gap: 26px !important;
+}
+
+#dashboard-page .qa-pie {
+  width: 190px !important;
+  max-width: 100% !important;
+}
+
+#dashboard-page .chart-legend span,
+#dashboard-page .qa-status-row,
+#dashboard-page .qa-risk-item {
+  min-height: 46px !important;
+  padding: 10px 14px !important;
+}
+
+#dashboard-page .qa-status-row {
+  grid-template-columns: minmax(120px, 1fr) 58px minmax(180px, 1.35fr) !important;
+}
+
+@media (max-width: 1500px) {
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone.drop-zone {
+    grid-template-columns: 36px minmax(220px, 1fr) auto !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-panel {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #dashboard-page .qa-kpi-grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr)) !important;
+  }
+
+  #dashboard-page .qa-panels {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 980px) {
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) .container,
+  body[data-page="history"] .container {
+    margin: 10px !important;
+    width: calc(100% - 20px) !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone.drop-zone {
+    grid-template-columns: 36px 1fr !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .source-actions,
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-panel {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .source-actions,
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-actions {
+    flex-wrap: wrap !important;
+  }
+
+  #dashboard-page .qa-kpi-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr)) !important;
+  }
+
+  #dashboard-page .qa-chart-layout,
+  #dashboard-page .qa-status-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone.drop-zone {
+    grid-template-columns: 1fr !important;
+    justify-items: stretch !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .drop-icon-wrap,
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .drop-zone__prompt {
+    grid-column: 1 !important;
+    justify-self: center !important;
+    text-align: center !important;
+  }
+
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .source-btn,
+  body[data-page="analyse"].has-analysis:not(.analysis-table-focus) #drop-zone .queue-btn {
+    flex: 1 1 100% !important;
+  }
+
+  #dashboard-page .qa-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
