@@ -89,7 +89,25 @@ Puis ouvrir:
 http://127.0.0.1:5000/
 ```
 
-Le fichier `index.html` a ete ajuste pour rediriger vers l'URL Flask. Il ne faut plus ouvrir directement `templates/index.html`, parce que cette page utilise maintenant des includes Jinja.
+Pour le mode Flask, utiliser `http://127.0.0.1:5000/`. Il ne faut pas ouvrir directement `templates/index.html`, parce que cette page utilise des includes Jinja.
+
+## GitHub Pages
+
+Le projet peut aussi fonctionner en mode static sur GitHub Pages.
+
+- `index.html` a la racine est la version static complete pour GitHub Pages.
+- `templates/index.html` reste la version Flask/Jinja pour le lancement local avec `python app.py`.
+- Les assets sont charges avec des chemins relatifs: `static/style.css`, `static/css/app-layout.css`, `static/js/...`.
+- `.nojekyll` est ajoute pour que GitHub Pages serve les fichiers static sans traitement Jekyll.
+- Si les partials changent, regenerer aussi le `index.html` racine pour garder la version GitHub Pages a jour.
+
+Dans GitHub, configurer Pages avec:
+
+```text
+Source: Deploy from a branch
+Branch: master
+Folder: /root
+```
 
 ## Verification faite
 
