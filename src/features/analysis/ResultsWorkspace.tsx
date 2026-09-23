@@ -11,7 +11,6 @@ interface ResultsWorkspaceProps {
   fixedKeys: ReadonlySet<string>;
   blockedKeys: ReadonlySet<string>;
   onImport: () => void;
-  onRunTests: () => void;
   onRunCase: (item: TestCase) => void;
   onRunSource: (mode: "folder" | "file", targetPath: string) => void;
   runningTests: boolean;
@@ -120,9 +119,6 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
       <header className="results-summary">
         <div><h2>Resultats de l'analyse</h2><p>Tests, modules et messages d'execution.</p></div>
         <div className="summary-actions">
-          <button className="button button--secondary" type="button" onClick={props.onRunTests}>
-            <Wrench size={16} /> Dossier projet
-          </button>
           <button className="button button--secondary" type="button" onClick={props.onImport}><Import size={16} /> Importer</button>
           <SummaryPill kind="fail" icon={<TriangleAlert size={15} />} value={openFailures} label="Echecs" />
           <SummaryPill kind="blocked" icon={<Ban size={15} />} value={stats.blocked} label="Bloques" />

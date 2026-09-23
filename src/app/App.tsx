@@ -86,6 +86,8 @@ export function App() {
         title={pageCopy[page].title}
         description={pageCopy[page].description}
         theme={theme}
+        showProjectButton={page === "analysis"}
+        onProjectButtonClick={() => window.dispatchEvent(new Event("open-project-root-dialog"))}
         onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")}
       />
       <div className={`app-content app-content--${page}`}>

@@ -50,6 +50,12 @@ export function AnalysisPage(props: AnalysisPageProps) {
     return () => document.removeEventListener("dragenter", onDragEnter);
   }, [props.data]);
 
+  useEffect(() => {
+    const openProjectRootDialog = () => setRunnerOpen(true);
+    window.addEventListener("open-project-root-dialog", openProjectRootDialog);
+    return () => window.removeEventListener("open-project-root-dialog", openProjectRootDialog);
+  }, []);
+
   function addFiles(files: FileWithPath[]) {
     setError("");
     setAllFiles((current) => uniqueFiles([...current, ...files]));
@@ -158,7 +164,6 @@ export function AnalysisPage(props: AnalysisPageProps) {
       }}
       onClear={() => { setReportFiles([]); setAllFiles([]); setError(""); }}
       onAnalyze={analyze}
-      onRunTests={() => setRunnerOpen(true)}
       onClose={props.data ? () => setImportOpen(false) : undefined}
     />
   );
@@ -171,7 +176,6 @@ export function AnalysisPage(props: AnalysisPageProps) {
           fixedKeys={props.fixedKeys}
           blockedKeys={props.blockedKeys}
           onImport={() => setImportOpen(true)}
-          onRunTests={() => setRunnerOpen(true)}
           onRunCase={runCase}
           onRunSource={runSource}
           runningTests={runningTests}

@@ -100,6 +100,7 @@ h1, h2, h3, p { margin-top: 0; }
 .app-header h1 { margin: 0 0 4px; font-size: 1.65rem; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-header p { margin: 0; color: var(--muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-header__actions { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; }
+.header-project-button { min-height: 42px; }
 .header-chip, .theme-button {
   min-height: 42px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px;
   border: 1px solid var(--border); border-radius: 7px; background: var(--surface-raised); color: var(--muted); font-weight: 700; white-space: nowrap;
@@ -562,6 +563,8 @@ body.table-focus-open { overflow: hidden; }
   .app-header h1 { font-size: 1.18rem; }
   .app-header p { display: none; }
   .header-chip { display: none; }
+  .header-project-button { width: 42px; padding: 0; }
+  .header-project-button { font-size: 0; gap: 0; }
   .theme-button { width: 42px; padding: 0; justify-content: center; }
   .theme-button span { display: none; }
   .sidebar, .sidebar--collapsed {
