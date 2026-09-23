@@ -2,6 +2,8 @@ import type {
   AnalysisData,
   AnalysisModule,
   FileWithPath,
+  KeywordDetailNode,
+  KeywordMessage,
   ScreenshotRef,
   SuiteNode,
   TestCase,
@@ -52,6 +54,7 @@ function walkSuite(element: Element): SuiteNode {
   const node: SuiteNode = {
     id: element.getAttribute("id") || "",
     name: element.getAttribute("name") || "Suite",
+    source: element.getAttribute("source") || undefined,
     children: [],
     testCount: 0,
     failCount: 0,
@@ -88,6 +91,16 @@ function suitePathIds(test: Element): string[] {
   return path;
 }
 
+function robotSourcePath(test: Element): string {
+  let current: Element | null = test.parentElement;
+  while (current) {
+    const source = current.getAttribute("source") || "";
+    if (/\.robot$/i.test(source)) return source;
+    current = current.parentElement;
+  }
+  return "";
+}
+
 function failedKeywordPath(element: Element | null, path: string[] = []): string[] {
   if (!element) return path;
   if (element.tagName === "kw") {
@@ -111,12 +124,68 @@ function elapsedValue(status: Element | null): string {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}s`;
 }
 
+function keywordDisplayName(element: Element): { library: string; name: string } {
+  const library = element.getAttribute("library") || "";
+  const rawName =
+    element.getAttribute("name") ||
+    element.getAttribute("type") ||
+    element.tagName.toUpperCase();
+  return { library, name: library ? `${library}.${rawName}` : rawName };
+}
+
+function nodeStatus(element: Element): Element | null {
+  return directChild(element, "status");
+}
+
+function extractMessages(element: Element): KeywordMessage[] {
+  return directChildren(element, "msg").map((message) => ({
+    level: message.getAttribute("level") || "INFO",
+    timestamp: message.getAttribute("timestamp") || "",
+    text: message.textContent?.trim() || "",
+  })).filter((message) => message.text);
+}
+
+function extractKeywordChildren(element: Element, parentId: string): KeywordDetailNode[] {
+  const supported = new Set(["kw", "if", "branch", "for", "iter", "try", "group", "while", "return"]);
+  return Array.from(element.children)
+    .filter((child) => supported.has(child.tagName))
+    .map((child, index) => extractKeywordNode(child, `${parentId}-${index}`));
+}
+
+function extractKeywordNode(element: Element, id: string): KeywordDetailNode {
+  const { library, name } = keywordDisplayName(element);
+  const statusNode = nodeStatus(element);
+  const status = statusNode?.getAttribute("status") || "";
+  const failMessage =
+    directChildren(element, "msg").find((message) => message.getAttribute("level") === "FAIL")?.textContent?.trim() ||
+    statusNode?.textContent?.trim() ||
+    "";
+  return {
+    id,
+    type: element.getAttribute("type") || element.tagName,
+    name,
+    library,
+    args: directChildren(element, "arg").map((arg) => arg.textContent?.trim() || "").filter(Boolean),
+    assigns: directChildren(element, "var").map((variable) => variable.textContent?.trim() || "").filter(Boolean),
+    documentation: directChild(element, "doc")?.textContent?.trim() || "",
+    status,
+    startTime: statusNode?.getAttribute("starttime") || "",
+    elapsed: elapsedValue(statusNode),
+    errorMessage: status === "FAIL" ? failMessage : "",
+    messages: extractMessages(element),
+    children: extractKeywordChildren(element, id),
+  };
+}
+
+function extractKeywordTree(test: Element): KeywordDetailNode[] {
+  return directChildren(test, "kw").map((keyword, index) => extractKeywordNode(keyword, `kw-${index}`));
+}
+
 function extractTimeline(test: Element): TimelineStep[] {
   const failedPath = new Set(failedKeywordPath(test));
   return directChildren(test, "kw").map((keyword) => {
-    const library = keyword.getAttribute("library") || "";
     const rawName = keyword.getAttribute("name") || "Keyword";
-    const name = library ? `${library}.${rawName}` : rawName;
+    const { name } = keywordDisplayName(keyword);
     const statusNode = directChild(keyword, "status");
     const status = statusNode?.getAttribute("status") || "PASS";
     const message =
@@ -207,11 +276,13 @@ async function analyzeXml(
       moduleId,
       moduleName,
       sourceFile: filename,
+      robotSourceFile: robotSourcePath(test) || undefined,
       status,
       caseName: test.getAttribute("name") || "Cas inconnu",
       keyword: keywordPath.length ? keywordPath.join(" > ") : status === "FAIL" ? "Keyword inconnu" : "Test reussi",
       errorMessage,
       timeline: extractTimeline(test),
+      keywordTree: extractKeywordTree(test),
       startTime: statusNode?.getAttribute("starttime") || "",
       elapsed: elapsedValue(statusNode),
       tags: directChildren(test, "tag").map((tag) => tag.textContent?.trim() || "").filter(Boolean),
@@ -255,6 +326,7 @@ async function analyzeHtml(file: FileWithPath, fileIndex: number): Promise<{ mod
       keyword: "Analyse XML recommandee",
       errorMessage: match[2],
       timeline: [],
+      keywordTree: [],
       startTime: "",
       elapsed: "",
       tags: [],

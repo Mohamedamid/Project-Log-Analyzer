@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownAZ, Ban, CheckCheck, CheckCircle2, ChevronDown, CirclePause, Eraser, Import, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, Search, Tags, TriangleAlert, Wrench, X } from "lucide-react";
-import type { AnalysisData, AnalysisModule, SuiteNode, TestCase } from "../../types/analysis";
-import { getAnalysisStats, getCaseKey } from "../../utils/analysis";
+import { ArrowDownAZ, Ban, CheckCheck, CheckCircle2, ChevronDown, CirclePause, Eraser, Import, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, Play, Search, Tags, TriangleAlert, Wrench, X } from "lucide-react";
+import type { AnalysisData, AnalysisModule, RunComparison, SuiteNode, TestCase } from "../../types/analysis";
+import { getAnalysisStats, getCaseKey, getStableCaseKey } from "../../utils/analysis";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { ModuleTree } from "./ModuleTree";
 import { TestDetailDialog } from "./TestDetailDialog";
@@ -11,9 +11,18 @@ interface ResultsWorkspaceProps {
   fixedKeys: ReadonlySet<string>;
   blockedKeys: ReadonlySet<string>;
   onImport: () => void;
+  onRunTests: () => void;
+  onRunCase: (item: TestCase) => void;
+  onRunSource: (mode: "folder" | "file", targetPath: string) => void;
+  runningTests: boolean;
+  runningCaseKey: string | null;
+  runningSourceKey: string | null;
+  caseChanges: Record<string, { before: string; after: string }>;
+  comparison: RunComparison | null;
   onToggleFixed: (item: TestCase) => void;
   onToggleBlocked: (item: TestCase) => void;
   onDeleteModule: (module: AnalysisModule) => void;
+  onDeleteModules: (modules: AnalysisModule[]) => void;
 }
 
 type StatusFilter = "all" | "open" | "pass" | "fixed" | "blocked" | "other";
@@ -75,7 +84,8 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
       const fixed = fixedKeys.has(key);
       const blocked = blockedKeys.has(key);
       const kind = fixed ? "fixed" : blocked ? "blocked" : item.status === "PASS" ? "pass" : item.status === "FAIL" ? "open" : "other";
-      if (status !== "all" && kind !== status) return false;
+      const changedRecently = Boolean(props.caseChanges[getStableCaseKey(item)]);
+      if (status !== "all" && kind !== status && !changedRecently) return false;
       if (activeModule && item.moduleId !== activeModule.id) return false;
       if (activeSuite && !item.suiteIds.includes(activeSuite.id)) return false;
       if (activeKeyword && item.keyword.split(" > ")[0] !== activeKeyword) return false;
@@ -110,6 +120,9 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
       <header className="results-summary">
         <div><h2>Resultats de l'analyse</h2><p>Tests, modules et messages d'execution.</p></div>
         <div className="summary-actions">
+          <button className="button button--secondary" type="button" onClick={props.onRunTests}>
+            <Wrench size={16} /> Dossier projet
+          </button>
           <button className="button button--secondary" type="button" onClick={props.onImport}><Import size={16} /> Importer</button>
           <SummaryPill kind="fail" icon={<TriangleAlert size={15} />} value={openFailures} label="Echecs" />
           <SummaryPill kind="blocked" icon={<Ban size={15} />} value={stats.blocked} label="Bloques" />
@@ -118,7 +131,6 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
           <span className="summary-pill summary-pill--neutral">{stats.total} tests - {stats.modules} modules</span>
         </div>
       </header>
-
       <div className={`results-layout ${sidebarOpen ? "" : "results-layout--no-sidebar"}`}>
         {sidebarOpen ? (
           <ModuleTree
@@ -129,7 +141,11 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
             onSelectAll={() => { setActiveModule(null); setActiveSuite(null); closeMobileSidebar(); }}
             onSelectModule={(module) => { setActiveModule(module); setActiveSuite(null); closeMobileSidebar(); }}
             onSelectSuite={(module, suite) => { setActiveModule(module); setActiveSuite(suite); closeMobileSidebar(); }}
+            onRunSource={props.onRunSource}
+            runningSourceKey={props.runningSourceKey}
+            running={props.runningTests}
             onDeleteModule={props.onDeleteModule}
+            onDeleteModules={props.onDeleteModules}
             onClose={() => setSidebarOpen(false)}
           />
         ) : null}
@@ -182,7 +198,18 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
             </div>
           </div>
 
-          <CasesTable cases={visibleCases} fixedKeys={fixedKeys} blockedKeys={blockedKeys} onSelect={setSelectedCase} onToggleFixed={props.onToggleFixed} onToggleBlocked={props.onToggleBlocked} />
+          <CasesTable
+            cases={visibleCases}
+            fixedKeys={fixedKeys}
+            blockedKeys={blockedKeys}
+            caseChanges={props.caseChanges}
+            runningCaseKey={props.runningCaseKey}
+            runningTests={props.runningTests}
+            onSelect={setSelectedCase}
+            onRunCase={props.onRunCase}
+            onToggleFixed={props.onToggleFixed}
+            onToggleBlocked={props.onToggleBlocked}
+          />
         </main>
       </div>
 
@@ -253,7 +280,11 @@ interface CasesTableProps {
   cases: TestCase[];
   fixedKeys: ReadonlySet<string>;
   blockedKeys: ReadonlySet<string>;
+  caseChanges: Record<string, { before: string; after: string }>;
+  runningCaseKey: string | null;
+  runningTests: boolean;
   onSelect: (item: TestCase) => void;
+  onRunCase: (item: TestCase) => void;
   onToggleFixed: (item: TestCase) => void;
   onToggleBlocked: (item: TestCase) => void;
 }
@@ -274,13 +305,15 @@ function CasesTable(props: CasesTableProps) {
           const key = getCaseKey(item);
           const fixed = props.fixedKeys.has(key);
           const blocked = props.blockedKeys.has(key);
+          const change = props.caseChanges[getStableCaseKey(item)];
           return (
             <article className="mobile-case" key={item.id} onClick={() => props.onSelect(item)}>
               <div className="mobile-case__heading"><StatusBadge item={item} fixed={fixed} blocked={blocked} /><span className="tag">{item.moduleName}</span></div>
               <h3>{item.caseName}</h3><small>{item.suitePath.slice(1).map((suite) => suite.name).join(" > ") || "Suite non disponible"}</small>
               <KeywordPath keyword={item.keyword} failed={item.status === "FAIL"} />
+              {change ? <CaseChangeBadge change={change} /> : null}
               <p>{item.status === "PASS" ? "Test passe avec succes." : item.errorMessage || `Statut ${item.status}`}</p>
-              <CaseActions item={item} fixed={fixed} blocked={blocked} onToggleFixed={props.onToggleFixed} onToggleBlocked={props.onToggleBlocked} />
+              <CaseActions item={item} fixed={fixed} blocked={blocked} running={props.runningCaseKey === getStableCaseKey(item)} disabled={props.runningTests} onRunCase={props.onRunCase} onToggleFixed={props.onToggleFixed} onToggleBlocked={props.onToggleBlocked} />
             </article>
           );
         })}
@@ -289,15 +322,29 @@ function CasesTable(props: CasesTableProps) {
   );
 }
 
-function CaseRow({ item, fixedKeys, blockedKeys, onSelect, onToggleFixed, onToggleBlocked }: CasesTableProps & { item: TestCase }) {
+function CaseRow({
+  item,
+  fixedKeys,
+  blockedKeys,
+  caseChanges,
+  runningCaseKey,
+  runningTests,
+  onSelect,
+  onRunCase,
+  onToggleFixed,
+  onToggleBlocked,
+}: CasesTableProps & { item: TestCase }) {
   const key = getCaseKey(item);
   const fixed = fixedKeys.has(key);
   const blocked = blockedKeys.has(key);
   const message = item.status === "PASS" ? "Test passe avec succes." : item.errorMessage || `Statut ${item.status}`;
+  const stableKey = getStableCaseKey(item);
+  const change = caseChanges[stableKey];
+  const running = runningCaseKey === stableKey;
   const suite = item.suitePath.slice(1).map((entry) => entry.name).join(" > ") || "Suite non disponible";
   const tone = fixed ? "fixed" : blocked ? "blocked" : item.status === "PASS" ? "pass" : item.status === "FAIL" ? "fail" : "other";
   return (
-    <tr className={`case-row case-row--${tone}`} onClick={() => onSelect(item)}>
+    <tr className={`case-row case-row--${tone} ${change ? "case-row--changed" : ""}`} onClick={() => onSelect(item)}>
       <td className="case-status-cell"><StatusBadge item={item} fixed={fixed} blocked={blocked} /></td>
       <td className="case-name-cell">
         <strong className="case-identity__name" title={item.caseName}>{item.caseName}</strong>
@@ -305,11 +352,21 @@ function CaseRow({ item, fixedKeys, blockedKeys, onSelect, onToggleFixed, onTogg
           <span className="case-identity__module" title={item.moduleName}>{item.moduleName}</span>
           <span className="case-identity__suite" title={suite}>{suite}</span>
         </div>
+        {change ? <CaseChangeBadge change={change} /> : null}
       </td>
       <td className="case-keyword-cell"><KeywordPath keyword={item.keyword} failed={item.status === "FAIL"} /></td>
       <td className="case-message-cell"><div className={`case-message case-message--${tone}`} title={message}>{message}</div></td>
-      <td className="case-actions-cell"><CaseActions item={item} fixed={fixed} blocked={blocked} onToggleFixed={onToggleFixed} onToggleBlocked={onToggleBlocked} /></td>
+      <td className="case-actions-cell"><CaseActions item={item} fixed={fixed} blocked={blocked} running={running} disabled={runningTests} onRunCase={onRunCase} onToggleFixed={onToggleFixed} onToggleBlocked={onToggleBlocked} /></td>
     </tr>
+  );
+}
+
+function CaseChangeBadge({ change }: { change: { before: string; after: string } }) {
+  const resolved = change.before === "FAIL" && change.after === "PASS";
+  return (
+    <span className={`case-change-badge ${resolved ? "case-change-badge--resolved" : ""}`}>
+      {resolved ? "Corrige apres relance" : "Statut change"}: {change.before} &gt; {change.after}
+    </span>
   );
 }
 
@@ -332,16 +389,19 @@ function KeywordPath({ keyword, failed }: { keyword: string; failed: boolean }) 
   );
 }
 
-function CaseActions({ item, fixed, blocked, onToggleFixed, onToggleBlocked }: {
+function CaseActions({ item, fixed, blocked, running, disabled, onRunCase, onToggleFixed, onToggleBlocked }: {
   item: TestCase;
   fixed: boolean;
   blocked: boolean;
+  running: boolean;
+  disabled: boolean;
+  onRunCase: (item: TestCase) => void;
   onToggleFixed: (item: TestCase) => void;
   onToggleBlocked: (item: TestCase) => void;
 }) {
-  if (item.status === "PASS") return null;
   return (
     <div className="case-actions" onClick={(event) => event.stopPropagation()}>
+      <button className={`icon-button case-action case-action--run ${running ? "active" : ""}`} type="button" disabled={disabled} onClick={() => onRunCase(item)} title={running ? "Execution en cours" : "Lancer ce test"} aria-label={running ? "Execution en cours" : "Lancer ce test"}>{running ? <span className="button-spinner" /> : <Play size={16} />}</button>
       {item.status === "FAIL" ? <button className={`icon-button case-action case-action--fix ${fixed ? "active" : ""}`} type="button" onClick={() => onToggleFixed(item)} title={fixed ? "Annuler correction" : "Marquer corrige"} aria-label={fixed ? "Annuler correction" : "Marquer corrige"}><CheckCheck size={17} /></button> : null}
       <button className={`icon-button case-action case-action--block ${blocked ? "active" : ""}`} type="button" onClick={() => onToggleBlocked(item)} title={blocked ? "Debloquer" : "Marquer bloque"} aria-label={blocked ? "Debloquer" : "Marquer bloque"}><CirclePause size={17} /></button>
     </div>

@@ -13,6 +13,7 @@ interface ImportPanelProps {
   onRemoveFile: (index: number) => void;
   onClear: () => void;
   onAnalyze: () => void;
+  onRunTests?: () => void;
   onClose?: () => void;
 }
 
@@ -25,6 +26,7 @@ export function ImportPanel({
   onRemoveFile,
   onClear,
   onAnalyze,
+  onRunTests,
   onClose,
 }: ImportPanelProps) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -62,6 +64,11 @@ export function ImportPanel({
       </div>
 
       <div className="import-panel__actions">
+        {onRunTests ? (
+          <button className="button button--primary" type="button" onClick={onRunTests}>
+            <Play size={17} /> Dossier projet
+          </button>
+        ) : null}
         <button className="button button--secondary" type="button" onClick={() => fileInput.current?.click()}>
           <FileText size={17} /> Choisir fichiers
         </button>
