@@ -1,4 +1,4 @@
-export type PageId = "dashboard" | "analysis" | "history" | "gitlab";
+export type PageId = "dashboard" | "analysis" | "history";
 export type Theme = "light" | "dark";
 
 export interface TimelineStep {

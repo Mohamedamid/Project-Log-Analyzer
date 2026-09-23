@@ -100,7 +100,24 @@ h1, h2, h3, p { margin-top: 0; }
 .app-header h1 { margin: 0 0 4px; font-size: 1.65rem; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-header p { margin: 0; color: var(--muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-header__actions { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; }
-.header-project-button { min-height: 42px; }
+.header-project-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--surface-raised) 76%, var(--accent) 8%);
+  color: var(--accent-strong);
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.header-project-button:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
 .header-chip, .theme-button {
   min-height: 42px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px;
   border: 1px solid var(--border); border-radius: 7px; background: var(--surface-raised); color: var(--muted); font-weight: 700; white-space: nowrap;
@@ -371,7 +388,7 @@ body.table-focus-open { overflow: hidden; }
 .keyword-message strong { margin-right: 7px; font-size: .72rem; }.keyword-message small { color: var(--muted); font-size: .68rem; }
 .timeline { display: grid; }.timeline-step { min-height: 54px; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); }.timeline-step > i { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--green); }.timeline-step--fail > i { background: var(--red); }.timeline-step--skipped { opacity: .58; }.timeline-step--skipped > i { background: var(--muted); }.timeline-step > div { min-width: 0; display: grid; gap: 4px; }.timeline-step strong { font-size: .86rem; }.timeline-step small, .timeline-step > span { color: var(--muted); font-size: .75rem; }.timeline-step p { margin: 4px 0 0; padding: 8px; border-radius: 6px; color: #fb7185; background: color-mix(in srgb, var(--red) 12%, var(--surface)); }
 
-/* History and GitLab */
+/* History */
 .history-page { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
 .history-overview { min-height: 74px; display: grid; grid-template-columns: .7fr 1fr .85fr 1.55fr; margin-bottom: 12px; border-block: 1px solid var(--border); background: var(--surface-soft); }
 .history-metric { min-width: 0; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-right: 1px solid var(--border); }
@@ -422,9 +439,6 @@ body.table-focus-open { overflow: hidden; }
 .history-mobile-row__scope { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 10px 0; padding: 8px 0; border-block: 1px solid var(--border); color: var(--muted); font-size: .75rem; }
 .history-mobile-row__scope span { display: inline-flex; align-items: center; gap: 5px; }
 .history-mobile-row .history-outcome { margin-bottom: 11px; }
-.gitlab-page { overflow: auto; }.gitlab-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }.gitlab-steps article { position: relative; min-height: 170px; padding: 22px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); }.gitlab-steps article > span { position: absolute; top: 16px; right: 16px; color: var(--muted); font-size: 1.5rem; font-weight: 800; }.gitlab-steps h3 { margin: 18px 0 8px; }.gitlab-steps p { color: var(--muted); line-height: 1.5; }
-.pipeline-code { margin-top: 12px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: #0e1720; color: #d9e6ef; }.pipeline-code > div { min-height: 52px; display: flex; align-items: center; gap: 9px; padding: 0 16px; border-bottom: 1px solid #2b3c48; }.pipeline-code h3 { margin: 0; font-size: 1rem; }.pipeline-code pre { margin: 0; padding: 18px; overflow: auto; }.pipeline-code code { font: 14px/1.55 Consolas, monospace; }
-
 /* Dashboard */
 .dashboard-page--empty { display: flex; flex-direction: column; }
 .dashboard-page--empty .empty-state { flex: 1; border: 1px solid var(--border-strong); background: var(--surface-soft); }
@@ -539,7 +553,6 @@ body.table-focus-open { overflow: hidden; }
   .status-overview { grid-template-columns: 116px minmax(0, 1fr); gap: 10px; }
   .donut { width: 112px; }
   .donut::after { inset: 31px; }
-  .gitlab-steps { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 821px) and (max-width: 1180px) {
@@ -563,8 +576,8 @@ body.table-focus-open { overflow: hidden; }
   .app-header h1 { font-size: 1.18rem; }
   .app-header p { display: none; }
   .header-chip { display: none; }
-  .header-project-button { width: 42px; padding: 0; }
-  .header-project-button { font-size: 0; gap: 0; }
+  .header-project-button { width: 42px; padding: 0; justify-content: center; }
+  .header-project-button span { display: none; }
   .theme-button { width: 42px; padding: 0; justify-content: center; }
   .theme-button span { display: none; }
   .sidebar, .sidebar--collapsed {

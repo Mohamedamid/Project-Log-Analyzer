@@ -8,16 +8,14 @@ import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { AnalysisPage } from "../features/analysis/AnalysisPage";
 import { HistoryPage } from "../features/history/HistoryPage";
-import { GitLabPage } from "../features/gitlab/GitLabPage";
 
 const pageCopy: Record<PageId, { title: string; description: string }> = {
   dashboard: { title: "Dashboard projet", description: "Pilotage global des executions Robot Framework." },
   analysis: { title: "Analyse des logs", description: "Import des dossiers, filtres, modules et details d'erreur." },
   history: { title: "Historique", description: "Dernieres analyses sauvegardees localement." },
-  gitlab: { title: "GitLab pipeline", description: "Artifacts CI/CD pour alimenter le dashboard." },
 };
 
-const pageIds: PageId[] = ["dashboard", "analysis", "history", "gitlab"];
+const pageIds: PageId[] = ["dashboard", "analysis", "history"];
 
 function pageFromHash(): PageId {
   const value = window.location.hash.replace(/^#\/?/, "") as PageId;
@@ -110,7 +108,6 @@ export function App() {
             onRequestClear={() => setClearHistoryOpen(true)}
           />
         ) : null}
-        {page === "gitlab" ? <GitLabPage /> : null}
       </div>
       <ConfirmDialog
         open={clearHistoryOpen}

@@ -3,7 +3,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Gauge,
-  Gitlab,
   History,
 } from "lucide-react";
 import logoUrl from "../../assets/cegedim-logo.png";
@@ -20,7 +19,6 @@ const navigation = [
   { id: "dashboard" as const, label: "Dashboard", icon: Gauge },
   { id: "analysis" as const, label: "Analyse", icon: ChartNoAxesCombined },
   { id: "history" as const, label: "Historique", icon: History },
-  { id: "gitlab" as const, label: "GitLab", icon: Gitlab },
 ];
 
 export function Sidebar({ activePage, collapsed, onNavigate, onToggle }: SidebarProps) {
