@@ -147,6 +147,20 @@ export function AnalysisPage(props: AnalysisPageProps) {
     void launchTests(config, null, true, `${mode}:${targetPath}`);
   }
 
+  function requestStopRunningTests() {
+    setSweetAlert({
+      tone: "warning",
+      title: "Arreter l'execution ?",
+      message: "Le test Robot en cours sera interrompu. Les rapports peuvent etre incomplets.",
+      confirmLabel: "Oui",
+      cancelLabel: "Non",
+      onConfirm: () => {
+        setSweetAlert(null);
+        void stopRunningTests();
+      },
+    });
+  }
+
   async function stopRunningTests() {
     try {
       await cancelLocalTests();
@@ -212,7 +226,7 @@ export function AnalysisPage(props: AnalysisPageProps) {
           onImport={() => setImportOpen(true)}
           onRunCase={runCase}
           onRunSource={runSource}
-          onCancelRun={stopRunningTests}
+          onCancelRun={requestStopRunningTests}
           runningTests={runningTests}
           runningCaseKey={runningCaseKey}
           runningSourceKey={runningSourceKey}

@@ -108,7 +108,7 @@ If you open the GitHub Pages URL and click Play, the app can show the UI but it 
 - Use the **Play** button in any table row to relaunch that test case.
 - Use the **Play** button in the module/suite sidebar to relaunch a whole module, file, or subfolder.
 - While a test is running, the clicked button changes to **Stop**.
-- Click **Stop** to ask the local runner to stop the Robot process.
+- Click **Stop**, then confirm with **Oui**, to ask the local runner to stop the Robot process.
 - Other launch buttons stay disabled until the current execution stops or finishes.
 
 ## Result merge
