@@ -2,6 +2,72 @@
 
 This file summarizes the local test-runner and log-analysis features added to the app.
 
+## What works where
+
+### GitHub Pages
+
+URL:
+
+```text
+https://mohamedamid.github.io/Project-Log-Analyzer/
+```
+
+Works:
+
+- Import `output.xml`, `log.html`, or a folder selected by the user.
+- Analyze results, modules, keywords, screenshots, dashboard, history, comparison.
+- Mark tests as `Corrige` or `Bloque`.
+- Keep the current analysis after refresh with browser storage.
+
+Does not work:
+
+- Running `robot`.
+- Reading `C:\...` project folders automatically.
+- Launching a single test from the Play button.
+
+Reason: GitHub Pages is a static website. The browser is not allowed to execute local commands on the PC.
+
+### Local mode
+
+URL example:
+
+```text
+http://127.0.0.1:5173/Project-Log-Analyzer/
+```
+
+Works:
+
+- Everything from GitHub Pages.
+- Play button on a single test row.
+- Play button on a module, file, or folder.
+- Automatic import of the new `output.xml` and `log.html` after execution.
+
+Use this mode when you want **Lancer** to execute Robot tests from the PC.
+
+## Quick local setup
+
+Run this on the PC that contains the Robot project:
+
+```powershell
+cd C:\Users\Youcode\Desktop\log-analyzer
+npm install
+npm run dev -- --host 127.0.0.1
+```
+
+Check Robot:
+
+```powershell
+robot --version
+```
+
+If Robot is missing:
+
+```powershell
+pip install robotframework
+```
+
+The Robot project dependencies must also be installed on the same PC.
+
 ## Project root
 
 Open the analysis page and set **Dossier projet** once. Use the local root folder of the Robot project, for example:
@@ -11,6 +77,8 @@ C:\Users\Youcode\Desktop\tietix-TNR
 ```
 
 The app uses this root to find `.robot` files even when `output.xml` came from a GitLab pipeline with paths like `/builds/...`.
+
+Do not put the path of one `.robot` file as project root. Put the big root folder of the test project. The app will search inside it.
 
 ## Local runner availability
 
@@ -23,6 +91,8 @@ npm.cmd run dev -- --host 127.0.0.1
 ```
 
 Then open the local URL shown by Vite.
+
+If you open the GitHub Pages URL and click Play, the app can show the UI but it cannot execute the test unless a separate local runner/agent is installed and approved by IT.
 
 ## Launching tests
 
@@ -49,3 +119,12 @@ In the module sidebar:
 - Select multiple modules with the checkboxes.
 - Use **Supprimer** in the bulk bar to delete selected modules from the current analysis.
 - The single-module delete button is still available.
+
+## Local storage cleanup
+
+The app stores local UI state in the browser:
+
+- Current analysis in `IndexedDB`.
+- Settings, history, theme, fixed/blocked marks in `localStorage`.
+
+Use **Settings > Nettoyer donnees locales** to clear this browser state. This does not delete any file from the PC.

@@ -10,6 +10,7 @@ Application React pour analyser localement les rapports Robot Framework XML (`ou
 - Analyse avec navigation par module, recherche, filtres, tri, keywords et mode table focus.
 - Detail d'un test avec timeline, erreur et screenshots disponibles.
 - Historique local, statuts manuels `Corrige` et `Bloque`, themes clair et sombre.
+- Relance Robot locale depuis les boutons Play quand l'application est lancee en local.
 - Mise en page responsive pour ordinateur, tablette et mobile.
 
 ## Stack
@@ -33,7 +34,6 @@ src/
     analysis/          import, filtres, tableau et detail
     dashboard/         indicateurs et inventaire
     history/           historique local
-    gitlab/            aide pipeline
   hooks/               hooks partages
   services/            collecte et parsing des rapports
   styles/              design system et responsive
@@ -47,10 +47,20 @@ Le projet contient uniquement l'application React. L'entree Vite est `index.html
 
 ```powershell
 npm install
-npm run dev
+npm run dev -- --host 127.0.0.1
 ```
 
-Ouvrir ensuite l'URL affichee par Vite, normalement `http://localhost:5173/Project-Log-Analyzer/`.
+Ouvrir ensuite l'URL affichee par Vite, normalement `http://127.0.0.1:5173/Project-Log-Analyzer/`.
+
+Le mode local est obligatoire pour utiliser les boutons **Lancer**. Le serveur Vite expose une API locale qui execute `robot`, lit les rapports generes puis les reimporte dans l'analyse.
+
+Avant de lancer un test depuis l'interface:
+
+1. Installer Robot Framework et les libraries du projet de test.
+2. Ouvrir l'application depuis `127.0.0.1` ou `localhost`.
+3. Aller dans **Settings > Dossier projet**.
+4. Indiquer le dossier racine local du projet Robot, par exemple `C:\Users\Youcode\Desktop\tietix-TNR`.
+5. Cliquer sur Play dans une ligne de test ou dans le menu des modules.
 
 Verification et build de production:
 
@@ -68,6 +78,17 @@ Dans `Settings > Pages`, choisir **GitHub Actions** comme source. Chaque push su
 
 Site attendu: `https://mohamedamid.github.io/Project-Log-Analyzer/`
 
+Sur GitHub Pages, l'application peut importer et analyser des rapports, mais elle ne peut pas executer `robot` sur le PC. Les navigateurs bloquent l'acces direct aux fichiers locaux et aux commandes systeme depuis une page web publique. Pour faire fonctionner **Lancer** depuis GitHub Pages, il faudrait ajouter un runner local/agent installe sur le PC et valide par l'IT.
+
+Resume:
+
+- `https://mohamedamid.github.io/Project-Log-Analyzer/`: import, analyse, comparaison, dashboard, historique.
+- `http://127.0.0.1:5173/Project-Log-Analyzer/`: tout ce qui precede + execution locale Robot via les boutons Play.
+
 ## Donnees
 
-Les analyses, l'historique, le theme et les statuts manuels sont conserves dans le `localStorage` du navigateur. Aucun backend n'est necessaire pour GitHub Pages.
+Les analyses, l'historique, le theme et les statuts manuels sont conserves dans le navigateur. Les petits reglages utilisent `localStorage`; l'analyse courante utilise `IndexedDB` pour supporter les gros rapports Robot. Aucun backend n'est necessaire pour GitHub Pages.
+
+Le bouton **Settings > Nettoyer donnees locales** supprime ces donnees du navigateur sans toucher aux fichiers du PC.
+
+Plus de details: [TEST_RUNNER_GUIDE.md](./TEST_RUNNER_GUIDE.md).
