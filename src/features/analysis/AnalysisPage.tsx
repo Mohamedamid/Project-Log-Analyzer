@@ -274,6 +274,20 @@ function RunnerDialog({ config, busy, onChange, onClose, onRun }: {
               placeholder="C:\\chemin\\vers\\mon-projet"
             />
           </label>
+          <section className="runner-help" aria-label="Aide execution locale">
+            <h3>Lancer les tests en local</h3>
+            <p>
+              Si vous ouvrez l'outil depuis GitHub Pages, le navigateur ne peut pas executer Robot sur votre PC.
+              Pour que le bouton Play fonctionne, lancez l'application localement sur le PC qui contient le projet.
+            </p>
+            <pre>{`cd C:\\Users\\Youcode\\Desktop\\log-analyzer
+npm install
+npm run dev -- --host 127.0.0.1`}</pre>
+            <p>
+              Ouvrez ensuite l'URL Vite en <strong>127.0.0.1</strong>, puis indiquez ici le dossier racine du projet Robot,
+              pas un seul fichier <code>.robot</code>.
+            </p>
+          </section>
         </div>
         <footer className="runner-dialog__footer">
           <button className="button button--secondary" type="button" onClick={onClose}>Annuler</button>
