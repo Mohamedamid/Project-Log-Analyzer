@@ -111,6 +111,25 @@ export async function runLocalTests(config: TestRunnerConfig): Promise<TestRunne
   return payload as TestRunnerResponse;
 }
 
+export async function cancelLocalTests(): Promise<void> {
+  const response = await fetch("/api/test-runner/cancel", { method: "POST" });
+  const contentType = response.headers.get("content-type") || "";
+  const text = await response.text();
+  let payload: { error?: string } = {};
+  if (contentType.includes("application/json") && text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      throw new Error("Reponse invalide du runner local.");
+    }
+  } else if (!contentType.includes("application/json")) {
+    throw new Error(
+      "L'arret local des tests n'est pas disponible depuis GitHub Pages. Utilisez l'URL locale en 127.0.0.1.",
+    );
+  }
+  if (!response.ok) throw new Error(payload.error || "Impossible d'arreter l'execution.");
+}
+
 export function reportsToFiles(reports: TestRunnerResponse["reports"]): FileWithPath[] {
   return reports.map((report) => {
     const type = report.name.toLowerCase().endsWith(".xml") ? "application/xml" : "text/html";

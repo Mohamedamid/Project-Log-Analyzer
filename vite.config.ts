@@ -1,12 +1,9 @@
 // @ts-nocheck
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { exec } from "node:child_process";
+import { exec, spawn } from "node:child_process";
 import { access, readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
-
-const execAsync = promisify(exec);
 
 function sendJson(response, status, payload) {
   response.statusCode = status;
@@ -131,9 +128,74 @@ async function resolveRunTarget(serverRoot, payload) {
 }
 
 function testRunnerPlugin() {
+  let activeRun = null;
+
+  function runRobotCommand(command, cwd, timeoutMs) {
+    return new Promise((resolve) => {
+      const child = spawn(command, {
+        cwd,
+        shell: true,
+        windowsHide: true,
+      });
+      let stdout = "";
+      let stderr = "";
+      let settled = false;
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          activeRun.cancelled = true;
+          killProcessTree(child.pid);
+        }
+      }, timeoutMs);
+      activeRun = { child, cancelled: false };
+      child.stdout?.on("data", (chunk) => { stdout += chunk.toString(); });
+      child.stderr?.on("data", (chunk) => { stderr += chunk.toString(); });
+      child.on("error", (error) => {
+        stderr += error.message;
+      });
+      child.on("close", (code) => {
+        settled = true;
+        clearTimeout(timeout);
+        const cancelled = Boolean(activeRun?.cancelled);
+        activeRun = null;
+        resolve({ stdout, stderr, exitCode: typeof code === "number" ? code : 1, cancelled });
+      });
+    });
+  }
+
+  function killProcessTree(pid) {
+    if (!pid) return;
+    if (process.platform === "win32") {
+      exec(`taskkill /pid ${pid} /t /f`, { windowsHide: true }, () => {});
+    } else {
+      try {
+        process.kill(-pid, "SIGTERM");
+      } catch {
+        try {
+          process.kill(pid, "SIGTERM");
+        } catch {
+          // The process may already have exited.
+        }
+      }
+    }
+  }
+
   return {
     name: "local-test-runner",
     configureServer(server) {
+      server.middlewares.use("/api/test-runner/cancel", async (request, response) => {
+        if (request.method !== "POST") {
+          sendJson(response, 405, { error: "Methode non supportee." });
+          return;
+        }
+        if (!activeRun?.child) {
+          sendJson(response, 404, { error: "Aucune execution Robot en cours." });
+          return;
+        }
+        activeRun.cancelled = true;
+        killProcessTree(activeRun.child.pid);
+        sendJson(response, 200, { cancelled: true });
+      });
+
       server.middlewares.use("/api/test-runner/run", async (request, response) => {
         if (request.method !== "POST") {
           sendJson(response, 405, { error: "Methode non supportee." });
@@ -162,25 +224,17 @@ function testRunnerPlugin() {
           const cwd = resolvedTarget.cwd;
 
           if (!reportPaths.length) throw new Error("Ajoutez au moins un rapport a importer.");
+          if (activeRun) throw new Error("Une execution Robot est deja en cours.");
 
           const startedAt = new Date().toISOString();
           let stdout = "";
           let stderr = "";
           let exitCode = 0;
-          try {
-            const result = await execAsync(command, {
-              cwd,
-              windowsHide: true,
-              timeout: Number(payload.timeoutMs) || 1000 * 60 * 30,
-              maxBuffer: 1024 * 1024 * 20,
-            });
-            stdout = result.stdout;
-            stderr = result.stderr;
-          } catch (reason) {
-            stdout = reason.stdout || "";
-            stderr = reason.stderr || reason.message || "";
-            exitCode = typeof reason.code === "number" ? reason.code : 1;
-          }
+          const result = await runRobotCommand(command, cwd, Number(payload.timeoutMs) || 1000 * 60 * 30);
+          stdout = result.stdout;
+          stderr = result.stderr;
+          exitCode = result.exitCode;
+          if (result.cancelled) throw new Error("Execution Robot arretee par l'utilisateur.");
 
           const reports = [];
           for (const reportPath of reportPaths) {

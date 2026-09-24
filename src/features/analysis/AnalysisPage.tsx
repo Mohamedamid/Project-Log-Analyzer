@@ -5,7 +5,7 @@ import { analyzeReportFiles } from "../../services/robotParser";
 import { isReportFile } from "../../services/fileCollection";
 import { compareAnalyses, fileDisplayPath, getStableCaseKey, mergeRunData, mergeSingleCaseRun } from "../../utils/analysis";
 import { usePersistentState } from "../../hooks/usePersistentState";
-import { buildCaseRunConfig, buildSourceRunConfig, defaultRunnerConfig, reportsToFiles, runLocalTests, type TestRunnerConfig } from "../../services/testRunner";
+import { buildCaseRunConfig, buildSourceRunConfig, cancelLocalTests, defaultRunnerConfig, reportsToFiles, runLocalTests, type TestRunnerConfig } from "../../services/testRunner";
 import { SweetAlert, type SweetAlertTone } from "../../components/common/SweetAlert";
 import { ImportPanel, uniqueReportFiles } from "./ImportPanel";
 import { ResultsWorkspace } from "./ResultsWorkspace";
@@ -114,10 +114,11 @@ export function AnalysisPage(props: AnalysisPageProps) {
       setCaseChanges(Object.fromEntries((nextComparison?.statusChanges || []).map((item) => [item.caseKey, { before: item.before, after: item.after }])));
       setRunnerOpen(false);
     } catch (reason) {
+      const message = reason instanceof Error ? reason.message : "Impossible de lancer les tests.";
       setSweetAlert({
-        tone: "error",
-        title: "Execution impossible",
-        message: reason instanceof Error ? reason.message : "Impossible de lancer les tests.",
+        tone: message.includes("arretee") ? "info" : "error",
+        title: message.includes("arretee") ? "Execution arretee" : "Execution impossible",
+        message,
       });
     } finally {
       setRunningTests(false);
@@ -144,6 +145,23 @@ export function AnalysisPage(props: AnalysisPageProps) {
       return;
     }
     void launchTests(config, null, true, `${mode}:${targetPath}`);
+  }
+
+  async function stopRunningTests() {
+    try {
+      await cancelLocalTests();
+      setSweetAlert({
+        tone: "info",
+        title: "Arret demande",
+        message: "L'execution Robot en cours est en train d'etre arretee.",
+      });
+    } catch (reason) {
+      setSweetAlert({
+        tone: "error",
+        title: "Arret impossible",
+        message: reason instanceof Error ? reason.message : "Impossible d'arreter l'execution.",
+      });
+    }
   }
 
   function deleteModules() {
@@ -194,6 +212,7 @@ export function AnalysisPage(props: AnalysisPageProps) {
           onImport={() => setImportOpen(true)}
           onRunCase={runCase}
           onRunSource={runSource}
+          onCancelRun={stopRunningTests}
           runningTests={runningTests}
           runningCaseKey={runningCaseKey}
           runningSourceKey={runningSourceKey}

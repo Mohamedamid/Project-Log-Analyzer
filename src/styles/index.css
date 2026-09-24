@@ -282,6 +282,7 @@ body.table-focus-open { overflow: hidden; }
 .tree-run, .tree-delete { width: 26px; height: 28px; flex-basis: 26px; margin-left: 1px; opacity: 0; }
 .tree-row:hover .tree-run, .tree-row:hover .tree-delete, .tree-row.active .tree-run, .tree-row.active .tree-delete, .tree-run.active { opacity: .72; }
 .tree-run:hover { opacity: 1; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+.tree-run--stop, .tree-run--stop:hover { opacity: 1; color: var(--red); border-color: color-mix(in srgb, var(--red) 55%, var(--border)); }
 .tree-delete:hover { opacity: 1; color: var(--red); border-color: color-mix(in srgb, var(--red) 55%, var(--border)); }
 .tree-branch { position: relative; }
 .tree-branch::before { content: ""; position: absolute; top: 0; bottom: 0; left: 25px; width: 1px; background: color-mix(in srgb, var(--border) 70%, transparent); }
@@ -368,6 +369,7 @@ body.table-focus-open { overflow: hidden; }
 .case-actions { display: flex; justify-content: center; gap: 5px; }.case-actions .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
 .case-action--run { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
 .case-action--run:hover, .case-action--run.active { color: #fff; border-color: var(--accent); background: var(--accent); }
+.case-action--run.case-action--stop, .case-action--run.case-action--stop:hover { color: #fff; border-color: var(--red); background: var(--red); }
 .case-action--fix { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 45%, var(--border)); }
 .case-action--fix:hover, .case-action--fix.active { color: #fff; border-color: var(--teal); background: var(--teal); }
 .case-action--block { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, var(--border)); }

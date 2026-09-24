@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, ChevronDown, ChevronRight, Folder, Layers3, Play, Trash2, X } from "lucide-react";
+import { Box, ChevronDown, ChevronRight, Folder, Layers3, Play, Square, Trash2, X } from "lucide-react";
 import type { AnalysisModule, SuiteNode } from "../../types/analysis";
 
 interface ModuleTreeProps {
@@ -11,6 +11,7 @@ interface ModuleTreeProps {
   onSelectModule: (module: AnalysisModule) => void;
   onSelectSuite: (module: AnalysisModule, suite: SuiteNode) => void;
   onRunSource: (mode: "folder" | "file", targetPath: string) => void;
+  onCancelRun: () => void;
   runningSourceKey: string | null;
   running: boolean;
   onDeleteModule: (module: AnalysisModule) => void;
@@ -112,11 +113,15 @@ export function ModuleTree(props: ModuleTreeProps) {
                   <b className="count count--pass">{module.successCount}</b>
                   <b className="count count--fail">{module.failedCount}</b>
                 </span>
-                <button className={`icon-button tree-run ${props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? "active" : ""}`} type="button" disabled={props.running} onClick={() => {
+                <button className={`icon-button tree-run ${props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? "active tree-run--stop" : ""}`} type="button" disabled={props.running && props.runningSourceKey !== runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree))} onClick={() => {
                   const source = suiteSource(module.suiteTree);
+                  if (props.runningSourceKey === runSourceKey(sourceMode(source), source)) {
+                    props.onCancelRun();
+                    return;
+                  }
                   props.onRunSource(sourceMode(source), source);
-                }} aria-label={`Lancer ${module.name}`} title="Lancer module">
-                  {props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? <span className="button-spinner button-spinner--small" /> : <Play size={13} />}
+                }} aria-label={props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? `Arreter ${module.name}` : `Lancer ${module.name}`} title={props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? "Arreter l'execution" : "Lancer module"}>
+                  {props.runningSourceKey === runSourceKey(sourceMode(suiteSource(module.suiteTree)), suiteSource(module.suiteTree)) ? <Square size={12} /> : <Play size={13} />}
                 </button>
                 <button className="icon-button tree-delete" type="button" onClick={() => props.onDeleteModule(module)} aria-label={`Supprimer ${module.name}`}>
                   <Trash2 size={14} />
@@ -133,6 +138,7 @@ export function ModuleTree(props: ModuleTreeProps) {
                   onToggle={toggleSuite}
                   onSelect={props.onSelectSuite}
                   onRunSource={props.onRunSource}
+                  onCancelRun={props.onCancelRun}
                   runningSourceKey={props.runningSourceKey}
                   running={props.running}
                 />
@@ -145,7 +151,7 @@ export function ModuleTree(props: ModuleTreeProps) {
   );
 }
 
-function SuiteBranch({ module, suite, depth, activeSuiteId, expandedSuites, onToggle, onSelect, onRunSource, runningSourceKey, running }: {
+function SuiteBranch({ module, suite, depth, activeSuiteId, expandedSuites, onToggle, onSelect, onRunSource, onCancelRun, runningSourceKey, running }: {
   module: AnalysisModule;
   suite: SuiteNode;
   depth: number;
@@ -154,6 +160,7 @@ function SuiteBranch({ module, suite, depth, activeSuiteId, expandedSuites, onTo
   onToggle: (suiteId: string) => void;
   onSelect: (module: AnalysisModule, suite: SuiteNode) => void;
   onRunSource: (mode: "folder" | "file", targetPath: string) => void;
+  onCancelRun: () => void;
   runningSourceKey: string | null;
   running: boolean;
 }) {
@@ -178,11 +185,15 @@ function SuiteBranch({ module, suite, depth, activeSuiteId, expandedSuites, onTo
           <Folder size={15} /><span>{suite.name}</span>
         </button>
         {suite.failCount ? <b className="count count--fail">{suite.failCount}</b> : null}
-        <button className={`icon-button tree-run ${runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? "active" : ""}`} type="button" disabled={running} onClick={() => {
+        <button className={`icon-button tree-run ${runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? "active tree-run--stop" : ""}`} type="button" disabled={running && runningSourceKey !== runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite))} onClick={() => {
           const source = suiteSource(suite);
+          if (runningSourceKey === runSourceKey(sourceMode(source), source)) {
+            onCancelRun();
+            return;
+          }
           onRunSource(sourceMode(source), source);
-        }} aria-label={`Lancer ${suite.name}`} title="Lancer dossier/fichier">
-          {runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? <span className="button-spinner button-spinner--small" /> : <Play size={13} />}
+        }} aria-label={runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? `Arreter ${suite.name}` : `Lancer ${suite.name}`} title={runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? "Arreter l'execution" : "Lancer dossier/fichier"}>
+          {runningSourceKey === runSourceKey(sourceMode(suiteSource(suite)), suiteSource(suite)) ? <Square size={12} /> : <Play size={13} />}
         </button>
       </div>
       {expanded ? suite.children.map((child) => (
@@ -196,6 +207,7 @@ function SuiteBranch({ module, suite, depth, activeSuiteId, expandedSuites, onTo
           onToggle={onToggle}
           onSelect={onSelect}
           onRunSource={onRunSource}
+          onCancelRun={onCancelRun}
           runningSourceKey={runningSourceKey}
           running={running}
         />

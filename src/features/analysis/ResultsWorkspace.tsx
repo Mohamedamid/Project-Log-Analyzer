@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownAZ, Ban, CheckCheck, CheckCircle2, ChevronDown, CirclePause, Eraser, Import, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, Play, Search, Tags, TriangleAlert, Wrench, X } from "lucide-react";
+import { ArrowDownAZ, Ban, CheckCheck, CheckCircle2, ChevronDown, CirclePause, Eraser, Import, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, Play, Search, Square, Tags, TriangleAlert, Wrench, X } from "lucide-react";
 import type { AnalysisData, AnalysisModule, RunComparison, SuiteNode, TestCase } from "../../types/analysis";
 import { getAnalysisStats, getCaseKey, getStableCaseKey } from "../../utils/analysis";
 import { StatusBadge } from "../../components/common/StatusBadge";
@@ -13,6 +13,7 @@ interface ResultsWorkspaceProps {
   onImport: () => void;
   onRunCase: (item: TestCase) => void;
   onRunSource: (mode: "folder" | "file", targetPath: string) => void;
+  onCancelRun: () => void;
   runningTests: boolean;
   runningCaseKey: string | null;
   runningSourceKey: string | null;
@@ -138,6 +139,7 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
             onSelectModule={(module) => { setActiveModule(module); setActiveSuite(null); closeMobileSidebar(); }}
             onSelectSuite={(module, suite) => { setActiveModule(module); setActiveSuite(suite); closeMobileSidebar(); }}
             onRunSource={props.onRunSource}
+            onCancelRun={props.onCancelRun}
             runningSourceKey={props.runningSourceKey}
             running={props.runningTests}
             onDeleteModule={props.onDeleteModule}
@@ -203,6 +205,7 @@ export function ResultsWorkspace(props: ResultsWorkspaceProps) {
             runningTests={props.runningTests}
             onSelect={setSelectedCase}
             onRunCase={props.onRunCase}
+            onCancelRun={props.onCancelRun}
             onToggleFixed={props.onToggleFixed}
             onToggleBlocked={props.onToggleBlocked}
           />
@@ -281,6 +284,7 @@ interface CasesTableProps {
   runningTests: boolean;
   onSelect: (item: TestCase) => void;
   onRunCase: (item: TestCase) => void;
+  onCancelRun: () => void;
   onToggleFixed: (item: TestCase) => void;
   onToggleBlocked: (item: TestCase) => void;
 }
@@ -309,7 +313,7 @@ function CasesTable(props: CasesTableProps) {
               <KeywordPath keyword={item.keyword} failed={item.status === "FAIL"} />
               {change ? <CaseChangeBadge change={change} /> : null}
               <p>{item.status === "PASS" ? "Test passe avec succes." : item.errorMessage || `Statut ${item.status}`}</p>
-              <CaseActions item={item} fixed={fixed} blocked={blocked} running={props.runningCaseKey === getStableCaseKey(item)} disabled={props.runningTests} onRunCase={props.onRunCase} onToggleFixed={props.onToggleFixed} onToggleBlocked={props.onToggleBlocked} />
+              <CaseActions item={item} fixed={fixed} blocked={blocked} running={props.runningCaseKey === getStableCaseKey(item)} disabled={props.runningTests} onRunCase={props.onRunCase} onCancelRun={props.onCancelRun} onToggleFixed={props.onToggleFixed} onToggleBlocked={props.onToggleBlocked} />
             </article>
           );
         })}
@@ -327,6 +331,7 @@ function CaseRow({
   runningTests,
   onSelect,
   onRunCase,
+  onCancelRun,
   onToggleFixed,
   onToggleBlocked,
 }: CasesTableProps & { item: TestCase }) {
@@ -352,7 +357,7 @@ function CaseRow({
       </td>
       <td className="case-keyword-cell"><KeywordPath keyword={item.keyword} failed={item.status === "FAIL"} /></td>
       <td className="case-message-cell"><div className={`case-message case-message--${tone}`} title={message}>{message}</div></td>
-      <td className="case-actions-cell"><CaseActions item={item} fixed={fixed} blocked={blocked} running={running} disabled={runningTests} onRunCase={onRunCase} onToggleFixed={onToggleFixed} onToggleBlocked={onToggleBlocked} /></td>
+      <td className="case-actions-cell"><CaseActions item={item} fixed={fixed} blocked={blocked} running={running} disabled={runningTests} onRunCase={onRunCase} onCancelRun={onCancelRun} onToggleFixed={onToggleFixed} onToggleBlocked={onToggleBlocked} /></td>
     </tr>
   );
 }
@@ -385,19 +390,20 @@ function KeywordPath({ keyword, failed }: { keyword: string; failed: boolean }) 
   );
 }
 
-function CaseActions({ item, fixed, blocked, running, disabled, onRunCase, onToggleFixed, onToggleBlocked }: {
+function CaseActions({ item, fixed, blocked, running, disabled, onRunCase, onCancelRun, onToggleFixed, onToggleBlocked }: {
   item: TestCase;
   fixed: boolean;
   blocked: boolean;
   running: boolean;
   disabled: boolean;
   onRunCase: (item: TestCase) => void;
+  onCancelRun: () => void;
   onToggleFixed: (item: TestCase) => void;
   onToggleBlocked: (item: TestCase) => void;
 }) {
   return (
     <div className="case-actions" onClick={(event) => event.stopPropagation()}>
-      <button className={`icon-button case-action case-action--run ${running ? "active" : ""}`} type="button" disabled={disabled} onClick={() => onRunCase(item)} title={running ? "Execution en cours" : "Lancer ce test"} aria-label={running ? "Execution en cours" : "Lancer ce test"}>{running ? <span className="button-spinner" /> : <Play size={16} />}</button>
+      <button className={`icon-button case-action case-action--run ${running ? "active case-action--stop" : ""}`} type="button" disabled={disabled && !running} onClick={() => running ? onCancelRun() : onRunCase(item)} title={running ? "Arreter l'execution" : "Lancer ce test"} aria-label={running ? "Arreter l'execution" : "Lancer ce test"}>{running ? <Square size={14} /> : <Play size={16} />}</button>
       {item.status === "FAIL" ? <button className={`icon-button case-action case-action--fix ${fixed ? "active" : ""}`} type="button" onClick={() => onToggleFixed(item)} title={fixed ? "Annuler correction" : "Marquer corrige"} aria-label={fixed ? "Annuler correction" : "Marquer corrige"}><CheckCheck size={17} /></button> : null}
       {item.status !== "PASS" ? <button className={`icon-button case-action case-action--block ${blocked ? "active" : ""}`} type="button" onClick={() => onToggleBlocked(item)} title={blocked ? "Debloquer" : "Marquer bloque"} aria-label={blocked ? "Debloquer" : "Marquer bloque"}><CirclePause size={17} /></button> : null}
     </div>

@@ -63,6 +63,7 @@ Ouvrir ensuite l'URL affichee par Vite, normalement `http://127.0.0.1:5173/Proje
 Dans le terminal, apres `npm run dev`, garder la fenetre ouverte et cliquer/copier le lien affiche apres `Local:`. Le bouton Play de l'interface doit afficher un spinner pendant l'execution du test.
 
 Le mode local est obligatoire pour utiliser les boutons **Lancer**. Le serveur Vite expose une API locale qui execute `robot`, lit les rapports generes puis les reimporte dans l'analyse.
+Pendant une execution, le bouton Play devient un bouton **Stop**. Cliquer dessus arrete le process Robot en cours.
 
 Avant de lancer un test depuis l'interface:
 
