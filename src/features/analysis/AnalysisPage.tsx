@@ -278,14 +278,15 @@ function RunnerDialog({ config, busy, onChange, onClose, onRun }: {
             <h3>Lancer les tests en local</h3>
             <p>
               Si vous ouvrez l'outil depuis GitHub Pages, le navigateur ne peut pas executer Robot sur votre PC.
-              Pour que le bouton Play fonctionne, lancez l'application localement sur le PC qui contient le projet.
+              Pour que le bouton Play fonctionne sur n'importe quel PC, installez Node.js puis lancez l'application localement.
             </p>
-            <pre>{`cd C:\\Users\\Youcode\\Desktop\\log-analyzer
+            <pre>{`git clone https://github.com/Mohamedamid/Project-Log-Analyzer.git
+cd Project-Log-Analyzer
 npm install
 npm run dev -- --host 127.0.0.1`}</pre>
             <p>
-              Ouvrez ensuite l'URL Vite en <strong>127.0.0.1</strong>, puis indiquez ici le dossier racine du projet Robot,
-              pas un seul fichier <code>.robot</code>.
+              Ouvrez l'URL Vite en <strong>127.0.0.1</strong>. Robot Framework et les libraries du projet de test doivent etre installes sur ce PC.
+              Ici, indiquez le dossier racine du projet Robot, pas un seul fichier <code>.robot</code>.
             </p>
           </section>
         </div>

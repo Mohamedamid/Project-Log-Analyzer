@@ -49,7 +49,8 @@ Use this mode when you want **Lancer** to execute Robot tests from the PC.
 Run this on the PC that contains the Robot project:
 
 ```powershell
-cd C:\Users\Youcode\Desktop\log-analyzer
+git clone https://github.com/Mohamedamid/Project-Log-Analyzer.git
+cd Project-Log-Analyzer
 npm install
 npm run dev -- --host 127.0.0.1
 ```
@@ -73,7 +74,7 @@ The Robot project dependencies must also be installed on the same PC.
 Open the analysis page and set **Dossier projet** once. Use the local root folder of the Robot project, for example:
 
 ```text
-C:\Users\Youcode\Desktop\tietix-TNR
+D:\Projets\tietix-TNR
 ```
 
 The app uses this root to find `.robot` files even when `output.xml` came from a GitLab pipeline with paths like `/builds/...`.

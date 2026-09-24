@@ -45,7 +45,15 @@ Le projet contient uniquement l'application React. L'entree Vite est `index.html
 
 ## Developpement local
 
+Sur n'importe quel PC, installer d'abord:
+
+- Node.js
+- Python + Robot Framework
+- Les libraries necessaires au projet Robot de test
+
 ```powershell
+git clone https://github.com/Mohamedamid/Project-Log-Analyzer.git
+cd Project-Log-Analyzer
 npm install
 npm run dev -- --host 127.0.0.1
 ```
@@ -59,7 +67,7 @@ Avant de lancer un test depuis l'interface:
 1. Installer Robot Framework et les libraries du projet de test.
 2. Ouvrir l'application depuis `127.0.0.1` ou `localhost`.
 3. Aller dans **Settings > Dossier projet**.
-4. Indiquer le dossier racine local du projet Robot, par exemple `C:\Users\Youcode\Desktop\tietix-TNR`.
+4. Indiquer le dossier racine local du projet Robot, par exemple `D:\Projets\tietix-TNR` ou le chemin utilise sur ce PC.
 5. Cliquer sur Play dans une ligne de test ou dans le menu des modules.
 
 Verification et build de production:
