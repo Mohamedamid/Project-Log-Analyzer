@@ -285,11 +285,11 @@ cd Project-Log-Analyzer
 npm install
 npm run dev -- --host 127.0.0.1`}</pre>
             <ol className="runner-help__steps">
-              <li>خلي terminal محلول بعد الامر الاخير.</li>
-              <li>قلب على السطر اللي فيه <code>Local:</code>.</li>
-              <li>كليك على الرابط اللي بحال <code>http://127.0.0.1:5173/Project-Log-Analyzer/</code>.</li>
-              <li>ملي تتحل الواجهة، رجع هنا وحط dossier الكبير ديال projet Robot.</li>
-              <li>دير Play حد test، خاص button يولي spinner حتى تكمل execution.</li>
+              <li>Gardez le terminal ouvert apres la derniere commande.</li>
+              <li>Reperez la ligne qui commence par <code>Local:</code>.</li>
+              <li>Ouvrez le lien, par exemple <code>http://127.0.0.1:5173/Project-Log-Analyzer/</code>.</li>
+              <li>Une fois l'interface ouverte, revenez ici et renseignez le dossier racine du projet Robot.</li>
+              <li>Cliquez sur Play a cote d'un test. Le bouton doit afficher un spinner pendant l'execution.</li>
             </ol>
             <p>
               Ouvrez l'URL Vite en <strong>127.0.0.1</strong>. Robot Framework et les libraries du projet de test doivent etre installes sur ce PC.
