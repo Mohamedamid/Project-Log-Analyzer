@@ -399,7 +399,7 @@ function CaseActions({ item, fixed, blocked, running, disabled, onRunCase, onTog
     <div className="case-actions" onClick={(event) => event.stopPropagation()}>
       <button className={`icon-button case-action case-action--run ${running ? "active" : ""}`} type="button" disabled={disabled} onClick={() => onRunCase(item)} title={running ? "Execution en cours" : "Lancer ce test"} aria-label={running ? "Execution en cours" : "Lancer ce test"}>{running ? <span className="button-spinner" /> : <Play size={16} />}</button>
       {item.status === "FAIL" ? <button className={`icon-button case-action case-action--fix ${fixed ? "active" : ""}`} type="button" onClick={() => onToggleFixed(item)} title={fixed ? "Annuler correction" : "Marquer corrige"} aria-label={fixed ? "Annuler correction" : "Marquer corrige"}><CheckCheck size={17} /></button> : null}
-      <button className={`icon-button case-action case-action--block ${blocked ? "active" : ""}`} type="button" onClick={() => onToggleBlocked(item)} title={blocked ? "Debloquer" : "Marquer bloque"} aria-label={blocked ? "Debloquer" : "Marquer bloque"}><CirclePause size={17} /></button>
+      {item.status !== "PASS" ? <button className={`icon-button case-action case-action--block ${blocked ? "active" : ""}`} type="button" onClick={() => onToggleBlocked(item)} title={blocked ? "Debloquer" : "Marquer bloque"} aria-label={blocked ? "Debloquer" : "Marquer bloque"}><CirclePause size={17} /></button> : null}
     </div>
   );
 }

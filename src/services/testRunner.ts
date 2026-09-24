@@ -93,7 +93,20 @@ export async function runLocalTests(config: TestRunnerConfig): Promise<TestRunne
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(config),
   });
-  const payload = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  const text = await response.text();
+  let payload: Partial<TestRunnerResponse> & { error?: string } = {};
+  if (contentType.includes("application/json")) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      throw new Error("Reponse invalide du runner local.");
+    }
+  } else {
+    throw new Error(
+      "Le lancement local des tests n'est pas disponible depuis GitHub Pages. Ouvrez ce projet en local et lancez `npm.cmd run dev -- --host 127.0.0.1`, puis utilisez l'URL locale.",
+    );
+  }
   if (!response.ok) throw new Error(payload.error || "Impossible de lancer les tests.");
   return payload as TestRunnerResponse;
 }

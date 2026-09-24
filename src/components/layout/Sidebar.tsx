@@ -5,7 +5,6 @@ import {
   Gauge,
   History,
 } from "lucide-react";
-import logoUrl from "../../assets/cegedim-logo.png";
 import type { PageId } from "../../types/analysis";
 
 interface SidebarProps {
@@ -25,7 +24,10 @@ export function Sidebar({ activePage, collapsed, onNavigate, onToggle }: Sidebar
   return (
     <aside className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
       <div className="sidebar__brand">
-        <img src={logoUrl} alt="Cegedim" />
+        <span className="sidebar__brand-mark" aria-hidden="true">
+          <ChartNoAxesCombined size={26} strokeWidth={2.4} />
+        </span>
+        <span className="sidebar__brand-text">Log Analyzer</span>
       </div>
 
       <button

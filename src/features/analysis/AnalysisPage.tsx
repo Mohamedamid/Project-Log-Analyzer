@@ -6,7 +6,7 @@ import { isReportFile } from "../../services/fileCollection";
 import { compareAnalyses, fileDisplayPath, getStableCaseKey, mergeRunData, mergeSingleCaseRun } from "../../utils/analysis";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { buildCaseRunConfig, buildSourceRunConfig, defaultRunnerConfig, reportsToFiles, runLocalTests, type TestRunnerConfig } from "../../services/testRunner";
-import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { SweetAlert, type SweetAlertTone } from "../../components/common/SweetAlert";
 import { ImportPanel, uniqueReportFiles } from "./ImportPanel";
 import { ResultsWorkspace } from "./ResultsWorkspace";
 
@@ -20,6 +20,15 @@ interface AnalysisPageProps {
   onToggleBlocked: (item: TestCase) => void;
 }
 
+type SweetAlertState = {
+  tone: SweetAlertTone;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+};
+
 export function AnalysisPage(props: AnalysisPageProps) {
   const [reportFiles, setReportFiles] = useState<FileWithPath[]>([]);
   const [allFiles, setAllFiles] = useState<FileWithPath[]>([]);
@@ -29,10 +38,11 @@ export function AnalysisPage(props: AnalysisPageProps) {
   const [modulesToDelete, setModulesToDelete] = useState<AnalysisModule[]>([]);
   const [runnerOpen, setRunnerOpen] = useState(false);
   const [runningTests, setRunningTests] = useState(false);
-  const [comparison, setComparison] = useState<RunComparison | null>(null);
+  const [comparison, setComparison] = usePersistentState<RunComparison | null>("log-analyzer-last-comparison-v2", null);
   const [runningCaseKey, setRunningCaseKey] = useState<string | null>(null);
   const [runningSourceKey, setRunningSourceKey] = useState<string | null>(null);
-  const [caseChanges, setCaseChanges] = useState<Record<string, { before: string; after: string }>>({});
+  const [caseChanges, setCaseChanges] = usePersistentState<Record<string, { before: string; after: string }>>("log-analyzer-case-changes-v2", {});
+  const [sweetAlert, setSweetAlert] = useState<SweetAlertState | null>(null);
   const [runnerConfig, setRunnerConfig] = usePersistentState<TestRunnerConfig>("log-analyzer-runner-config-v1", defaultRunnerConfig);
   const effectiveRunnerConfig: TestRunnerConfig = {
     ...defaultRunnerConfig,
@@ -70,6 +80,8 @@ export function AnalysisPage(props: AnalysisPageProps) {
     try {
       const data = await analyzeReportFiles(reportFiles, allFiles);
       props.onComplete(data);
+      setComparison(null);
+      setCaseChanges({});
       setImportOpen(false);
       setReportFiles([]);
       setAllFiles([]);
@@ -102,7 +114,11 @@ export function AnalysisPage(props: AnalysisPageProps) {
       setCaseChanges(Object.fromEntries((nextComparison?.statusChanges || []).map((item) => [item.caseKey, { before: item.before, after: item.after }])));
       setRunnerOpen(false);
     } catch (reason) {
-      window.alert(reason instanceof Error ? reason.message : "Impossible de lancer les tests.");
+      setSweetAlert({
+        tone: "error",
+        title: "Execution impossible",
+        message: reason instanceof Error ? reason.message : "Impossible de lancer les tests.",
+      });
     } finally {
       setRunningTests(false);
       setRunningCaseKey(null);
@@ -199,15 +215,32 @@ export function AnalysisPage(props: AnalysisPageProps) {
           onRun={(config) => {
             setRunnerConfig(config);
             setRunnerOpen(false);
+            setSweetAlert({
+              tone: "success",
+              title: "Dossier projet enregistre",
+              message: "Le dossier racine est sauvegarde. Vous pouvez lancer les tests depuis les lignes ou les modules.",
+            });
           }}
         />
       ) : null}
-      <ConfirmDialog
+      <SweetAlert
+        open={Boolean(sweetAlert)}
+        tone={sweetAlert?.tone}
+        title={sweetAlert?.title || ""}
+        message={sweetAlert?.message || ""}
+        confirmLabel={sweetAlert?.confirmLabel}
+        cancelLabel={sweetAlert?.cancelLabel}
+        onConfirm={sweetAlert?.onConfirm}
+        onClose={() => setSweetAlert(null)}
+      />
+      <SweetAlert
         open={Boolean(modulesToDelete.length)}
+        tone="warning"
         title={modulesToDelete.length > 1 ? `Supprimer ${modulesToDelete.length} modules ?` : `Supprimer "${modulesToDelete[0]?.name || "ce module"}" ?`}
         message={modulesToDelete.length > 1 ? "Les modules selectionnes et tous leurs tests seront retires de cette analyse." : "Le module et tous ses tests seront retires de cette analyse."}
-        confirmLabel="Supprimer"
-        onCancel={() => setModulesToDelete([])}
+        confirmLabel="Oui"
+        cancelLabel="Non"
+        onClose={() => setModulesToDelete([])}
         onConfirm={deleteModules}
       />
     </>

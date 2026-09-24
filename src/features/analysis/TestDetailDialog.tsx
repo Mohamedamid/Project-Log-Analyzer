@@ -16,26 +16,46 @@ interface TestDetailDialogProps {
 export function TestDetailDialog(props: TestDetailDialogProps) {
   const { item, fixed, blocked } = props;
   const [openKeywordIds, setOpenKeywordIds] = useState<Set<string>>(new Set());
+  const [detailKeywordIds, setDetailKeywordIds] = useState<Set<string>>(new Set());
 
-  const defaultOpenIds = useMemo(() => {
-    if (!item) return new Set<string>();
-    const failingIds = new Set<string>();
-    item.keywordTree.forEach((node) => collectDefaultOpenIds(node, failingIds));
-    if (!failingIds.size && item.keywordTree[0]) failingIds.add(item.keywordTree[0].id);
-    return failingIds;
+  const defaultKeywordState = useMemo(() => {
+    const openIds = new Set<string>();
+    const detailIds = new Set<string>();
+    if (!item) return { openIds, detailIds };
+    const keywordTree = item.keywordTree || [];
+    keywordTree.forEach((node) => collectDefaultKeywordState(node, openIds, detailIds));
+    if (!openIds.size && keywordTree[0]) {
+      openIds.add(keywordTree[0].id);
+      detailIds.add(keywordTree[0].id);
+    }
+    return { openIds, detailIds };
   }, [item]);
 
   useEffect(() => {
-    setOpenKeywordIds(defaultOpenIds);
-  }, [defaultOpenIds]);
+    setOpenKeywordIds(defaultKeywordState.openIds);
+    setDetailKeywordIds(defaultKeywordState.detailIds);
+  }, [defaultKeywordState]);
 
   if (!item) return null;
+  const keywordTree = item.keywordTree || [];
+  const timeline = item.timeline || [];
+  const screenshots = item.screenshots || [];
+  const suitePath = item.suitePath || [];
 
   function toggleKeyword(id: string) {
     setOpenKeywordIds((current) => {
       const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+        setDetailKeywordIds((details) => {
+          const nextDetails = new Set(details);
+          nextDetails.delete(id);
+          return nextDetails;
+        });
+      } else {
+        next.add(id);
+        setDetailKeywordIds((details) => new Set(details).add(id));
+      }
       return next;
     });
   }
@@ -45,7 +65,7 @@ export function TestDetailDialog(props: TestDetailDialogProps) {
       <section className="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-title" onMouseDown={(event) => event.stopPropagation()}>
         <header className="detail-dialog__header">
           <div>
-            <div className="breadcrumbs">{item.suitePath.slice(1).map((suite) => <span key={suite.id}>{suite.name}</span>)}</div>
+            <div className="breadcrumbs">{suitePath.slice(1).map((suite) => <span key={suite.id}>{suite.name}</span>)}</div>
             <h2 id="detail-title">{item.caseName}</h2>
           </div>
           <button className="icon-button" type="button" onClick={props.onClose} aria-label="Fermer"><X size={20} /></button>
@@ -67,11 +87,11 @@ export function TestDetailDialog(props: TestDetailDialogProps) {
         </div>
         <div className="detail-dialog__body">
           {item.documentation ? <section className="detail-section"><h3>Documentation</h3><p>{item.documentation}</p></section> : null}
-          {item.screenshots.length ? (
+          {screenshots.length ? (
             <section className="detail-section">
               <h3>Screenshots</h3>
               <div className="screenshot-grid">
-                {item.screenshots.map((shot) => (
+                {screenshots.map((shot) => (
                   <a href={shot.url} target="_blank" rel="noreferrer" key={shot.ref}>
                     {shot.foundLocalFile ? <img src={shot.url} alt={shot.label} /> : <span><ImageOff size={22} /> Image non trouvee</span>}
                     <small>{shot.label}</small>
@@ -83,15 +103,15 @@ export function TestDetailDialog(props: TestDetailDialogProps) {
           <section className="detail-section">
             <div className="detail-section__heading">
               <h3>Execution</h3>
-              {item.keywordTree.length ? <span>{item.keywordTree.length} keyword{item.keywordTree.length > 1 ? "s" : ""} racine</span> : null}
+              {keywordTree.length ? <span>{keywordTree.length} keyword{keywordTree.length > 1 ? "s" : ""} racine</span> : null}
             </div>
-            {item.keywordTree.length ? (
+            {keywordTree.length ? (
               <div className="keyword-tree" role="tree">
-                {item.keywordTree.map((node) => (
-                  <KeywordNodeView key={node.id} node={node} depth={0} openIds={openKeywordIds} onToggle={toggleKeyword} />
+                {keywordTree.map((node) => (
+                  <KeywordNodeView key={node.id} node={node} depth={0} openIds={openKeywordIds} detailIds={detailKeywordIds} onToggle={toggleKeyword} />
                 ))}
               </div>
-            ) : item.timeline.length ? <FlatTimeline steps={item.timeline} /> : <p className="muted"><Wrench size={15} /> Utilisez output.xml pour afficher la timeline.</p>}
+            ) : timeline.length ? <FlatTimeline steps={timeline} /> : <p className="muted"><Wrench size={15} /> Utilisez output.xml pour afficher la timeline.</p>}
           </section>
         </div>
       </section>
@@ -99,22 +119,26 @@ export function TestDetailDialog(props: TestDetailDialogProps) {
   );
 }
 
-function collectDefaultOpenIds(node: KeywordDetailNode, ids: Set<string>): boolean {
-  const childHasFailure = node.children.some((child) => collectDefaultOpenIds(child, ids));
-  const hasFailure = node.status === "FAIL" || Boolean(node.errorMessage) || childHasFailure;
-  if (hasFailure) ids.add(node.id);
+function collectDefaultKeywordState(node: KeywordDetailNode, openIds: Set<string>, detailIds: Set<string>): boolean {
+  const childHasFailure = node.children.some((child) => collectDefaultKeywordState(child, openIds, detailIds));
+  const selfFailed = node.status === "FAIL" || Boolean(node.errorMessage);
+  const hasFailure = selfFailed || childHasFailure;
+  if (hasFailure) openIds.add(node.id);
+  if (selfFailed && !childHasFailure) detailIds.add(node.id);
   return hasFailure;
 }
 
-function KeywordNodeView({ node, depth, openIds, onToggle }: {
+function KeywordNodeView({ node, depth, openIds, detailIds, onToggle }: {
   node: KeywordDetailNode;
   depth: number;
   openIds: ReadonlySet<string>;
+  detailIds: ReadonlySet<string>;
   onToggle: (id: string) => void;
 }) {
   const hasChildren = node.children.length > 0;
   const hasDetails = node.args.length || node.assigns.length || node.documentation || node.messages.length || node.errorMessage;
   const open = openIds.has(node.id);
+  const showDetails = open && detailIds.has(node.id);
   const status = node.status || "INFO";
   const tone = status === "FAIL" ? "fail" : status === "NOT RUN" || status === "SKIP" ? "skipped" : "pass";
   return (
@@ -128,11 +152,11 @@ function KeywordNodeView({ node, depth, openIds, onToggle }: {
       </button>
       {open ? (
         <div className="keyword-node__content">
-          {node.assigns.length ? <DetailChips icon={<TerminalSquare size={14} />} label="Assign" values={node.assigns} /> : null}
-          {node.args.length ? <DetailChips icon={<TerminalSquare size={14} />} label="Args" values={node.args} /> : null}
-          {node.documentation ? <div className="keyword-node__doc"><FileText size={14} /><p>{node.documentation}</p></div> : null}
-          {node.errorMessage ? <div className="keyword-node__error"><X size={14} /><p>{node.errorMessage}</p></div> : null}
-          {node.messages.length ? (
+          {showDetails && node.assigns.length ? <DetailChips icon={<TerminalSquare size={14} />} label="Assign" values={node.assigns} /> : null}
+          {showDetails && node.args.length ? <DetailChips icon={<TerminalSquare size={14} />} label="Args" values={node.args} /> : null}
+          {showDetails && node.documentation ? <div className="keyword-node__doc"><FileText size={14} /><p>{node.documentation}</p></div> : null}
+          {showDetails && node.errorMessage ? <div className="keyword-node__error"><X size={14} /><p>{node.errorMessage}</p></div> : null}
+          {showDetails && node.messages.length ? (
             <div className="keyword-messages">
               {node.messages.map((message, index) => (
                 <div className={`keyword-message keyword-message--${message.level.toLowerCase()}`} key={`${message.timestamp}-${index}`}>
@@ -144,7 +168,7 @@ function KeywordNodeView({ node, depth, openIds, onToggle }: {
           ) : null}
           {hasChildren ? (
             <div className="keyword-node__children" role="group">
-              {node.children.map((child) => <KeywordNodeView key={child.id} node={child} depth={depth + 1} openIds={openIds} onToggle={onToggle} />)}
+              {node.children.map((child) => <KeywordNodeView key={child.id} node={child} depth={depth + 1} openIds={openIds} detailIds={detailIds} onToggle={onToggle} />)}
             </div>
           ) : null}
         </div>

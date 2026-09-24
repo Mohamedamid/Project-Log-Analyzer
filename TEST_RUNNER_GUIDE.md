@@ -12,6 +12,18 @@ C:\Users\Youcode\Desktop\tietix-TNR
 
 The app uses this root to find `.robot` files even when `output.xml` came from a GitLab pipeline with paths like `/builds/...`.
 
+## Local runner availability
+
+Launching Robot tests requires the local Vite runner API. It does not work from GitHub Pages because GitHub Pages is static and cannot execute commands on your PC.
+
+Run the app locally before using the Play buttons:
+
+```text
+npm.cmd run dev -- --host 127.0.0.1
+```
+
+Then open the local URL shown by Vite.
+
 ## Launching tests
 
 - Use the **Play** button in any table row to relaunch that test case.

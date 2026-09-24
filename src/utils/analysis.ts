@@ -1,4 +1,4 @@
-import type { AnalysisData, AnalysisStats, FileWithPath, RunComparison, TestCase } from "../types/analysis";
+import type { AnalysisData, AnalysisModule, AnalysisStats, FileWithPath, KeywordDetailNode, RunComparison, SuiteNode, TestCase, TimelineStep } from "../types/analysis";
 
 export function getCaseKey(item: TestCase): string {
   return [item.sourceFile, item.moduleName, item.caseName, item.status].join("::");
@@ -10,6 +10,110 @@ export function getStableCaseKey(item: TestCase): string {
 
 function displayCaseName(item: TestCase): string {
   return `${item.moduleName} / ${item.caseName}`;
+}
+
+function asArray<T>(value: T[] | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeKeywordNode(node: Partial<KeywordDetailNode>, index = 0): KeywordDetailNode {
+  return {
+    id: node.id || `kw-${index}`,
+    type: node.type || "kw",
+    name: node.name || "Keyword",
+    library: node.library || "",
+    args: asArray(node.args),
+    assigns: asArray(node.assigns),
+    documentation: node.documentation || "",
+    status: node.status || "",
+    startTime: node.startTime || "",
+    elapsed: node.elapsed || "",
+    errorMessage: node.errorMessage || "",
+    messages: asArray(node.messages).map((message) => ({
+      level: message.level || "INFO",
+      timestamp: message.timestamp || "",
+      text: message.text || "",
+    })),
+    children: asArray(node.children).map(normalizeKeywordNode),
+  };
+}
+
+function normalizeTimelineStep(step: Partial<TimelineStep>): TimelineStep {
+  return {
+    type: step.type || "kw",
+    name: step.name || "Keyword",
+    args: asArray(step.args),
+    status: step.status || "",
+    elapsed: step.elapsed || "",
+    inFailedPath: Boolean(step.inFailedPath),
+    errorMessage: step.errorMessage || "",
+  };
+}
+
+function normalizeSuiteNode(node: Partial<SuiteNode> | null): SuiteNode | null {
+  if (!node) return null;
+  return {
+    id: node.id || "",
+    name: node.name || "Suite",
+    source: node.source,
+    children: asArray(node.children).map(normalizeSuiteNode).filter((child): child is SuiteNode => Boolean(child)),
+    testCount: Number(node.testCount || 0),
+    failCount: Number(node.failCount || 0),
+  };
+}
+
+function normalizeModule(module: Partial<AnalysisModule>, index: number): AnalysisModule {
+  return {
+    id: module.id || `module-${index + 1}`,
+    name: module.name || `Module ${index + 1}`,
+    sourceFile: module.sourceFile || "",
+    failedCount: Number(module.failedCount || 0),
+    successCount: Number(module.successCount || 0),
+    testCount: Number(module.testCount || 0),
+    suiteTree: normalizeSuiteNode(module.suiteTree || null),
+  };
+}
+
+function normalizeCase(item: Partial<TestCase>, index: number): TestCase {
+  return {
+    id: item.id || `case-${index}`,
+    moduleId: item.moduleId || "",
+    moduleName: item.moduleName || "Module",
+    sourceFile: item.sourceFile || "",
+    robotSourceFile: item.robotSourceFile,
+    status: item.status || "",
+    caseName: item.caseName || "Cas inconnu",
+    keyword: item.keyword || (item.status === "PASS" ? "Test reussi" : "Keyword inconnu"),
+    errorMessage: item.errorMessage || "",
+    timeline: asArray(item.timeline).map(normalizeTimelineStep),
+    keywordTree: asArray(item.keywordTree).map(normalizeKeywordNode),
+    startTime: item.startTime || "",
+    elapsed: item.elapsed || "",
+    tags: asArray(item.tags),
+    documentation: item.documentation || "",
+    screenshots: asArray(item.screenshots).map((shot) => ({
+      ref: shot.ref || shot.label || "",
+      label: shot.label || shot.ref || "Screenshot",
+      url: shot.url || "",
+      foundLocalFile: Boolean(shot.foundLocalFile),
+    })),
+    suitePath: asArray(item.suitePath).map((suite) => ({ id: suite.id || suite.name || "", name: suite.name || suite.id || "Suite" })),
+    suiteIds: asArray(item.suiteIds),
+  };
+}
+
+export function normalizeAnalysisData(data: AnalysisData | null | undefined): AnalysisData | null {
+  if (!data) return null;
+  const cases = asArray(data.cases).map(normalizeCase);
+  const failures = cases.filter((item) => item.status === "FAIL");
+  return {
+    totalCount: Number(data.totalCount || cases.length),
+    successCount: Number(data.successCount || cases.filter((item) => item.status === "PASS").length),
+    failedCount: Number(data.failedCount || failures.length),
+    cases,
+    failures,
+    modules: asArray(data.modules).map(normalizeModule),
+  };
 }
 
 export function compareAnalyses(previous: AnalysisData | null, current: AnalysisData): RunComparison | null {
