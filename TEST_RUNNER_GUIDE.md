@@ -55,6 +55,14 @@ npm install
 npm run dev -- --host 127.0.0.1
 ```
 
+After the last command:
+
+1. Keep the terminal open.
+2. Find the line that starts with `Local:`.
+3. Open the URL, usually `http://127.0.0.1:5173/Project-Log-Analyzer/`.
+4. In **Settings > Dossier projet**, enter the root folder of the Robot project.
+5. Click Play on a test row. The button should show a spinner while the test is running.
+
 Check Robot:
 
 ```powershell

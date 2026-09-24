@@ -406,6 +406,8 @@ body.table-focus-open { overflow: hidden; }
 .runner-help p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .runner-help pre { margin: 0; padding: 10px; overflow: auto; border: 1px solid var(--border); border-radius: 7px; background: #0b1118; color: #dbeafe; font: 12px/1.45 Consolas, monospace; white-space: pre-wrap; }
 .runner-help code { color: var(--text); font-size: .78rem; }
+.runner-help__steps { margin: 0; padding-left: 18px; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+.runner-help__steps li + li { margin-top: 4px; }
 .runner-message { padding: 10px 12px; border-radius: 7px; font-size: .82rem; line-height: 1.45; }.runner-message--error { color: #be123c; background: color-mix(in srgb, var(--red) 12%, var(--surface)); }
 .runner-output { max-height: 180px; margin: 0; padding: 12px; overflow: auto; border: 1px solid var(--border); border-radius: 7px; background: #0b1118; color: #dbeafe; font: 12px/1.5 Consolas, monospace; white-space: pre-wrap; }
 .runner-dialog__footer { min-height: 62px; display: flex; align-items: center; justify-content: flex-end; gap: 9px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface-soft); }
