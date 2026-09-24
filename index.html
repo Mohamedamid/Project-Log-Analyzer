@@ -9,6 +9,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        var isLocal = host === "localhost" || host === "127.0.0.1" || host === "";
+        if (isLocal) return;
+        var css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "/Project-Log-Analyzer/assets/app.css";
+        document.head.appendChild(css);
+        var script = document.createElement("script");
+        script.type = "module";
+        script.src = "/Project-Log-Analyzer/assets/app.js";
+        document.body.appendChild(script);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
